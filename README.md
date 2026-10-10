@@ -17,8 +17,10 @@ That is a real run against the signup form in `apps/demo-form`, which has a deli
 Needs Node 22.12 or newer, git, and pnpm 10 (or corepack, which comes with Node). katalepsis is not on npm yet, so the installer builds it from this repository:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/glamboyosa/katalepsis/main/install.sh | sh
+curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh
 ```
+
+The address redirects to [`install.sh`](install.sh) in this repository.
 
 It clones the repository into `~/.local/share/katalepsis`, runs `pnpm install` and `pnpm build` there, and writes two small launchers, `katalepsis` and `katalepsis-mcp`, into `~/.local/bin`. Set `KATALEPSIS_SOURCE_DIR` or `KATALEPSIS_INSTALL_DIR` to change those folders, and `KATALEPSIS_REF` to build a branch or tag other than `main`. Running the installer again updates the clone and rebuilds.
 

@@ -1,0 +1,5 @@
+Cloning https://github.com/glamboyosa/katalepsis.git into ~/.local/share/katalepsis
+Building katalepsis
+Installed katalepsis 0.1.0 to ~/.local/bin
+~/.local/bin is not on PATH. Add this line to your shell profile:
+  export PATH="$HOME/.local/bin:$PATH"

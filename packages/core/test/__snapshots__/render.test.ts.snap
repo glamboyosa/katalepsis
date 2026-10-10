@@ -9,69 +9,166 @@ exports[`renderHtml > is deterministic 1`] = `
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'">
 <title>katalepsis: Failed</title>
 <style>
-:root { color-scheme: light dark; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --muted: #57534e; --border: #e7e5e4;
-  --pass: #15803d; --fail: #b91c1c; --block: #a16207; --code: #f5f5f4; }
-@media (prefers-color-scheme: dark) { :root { --bg: #0c0a09; --surface: #1c1917; --text: #f5f5f4; --muted: #a8a29e;
-  --border: #292524; --pass: #4ade80; --fail: #f87171; --block: #facc15; --code: #292524; } }
+:root {
+  color-scheme: light dark;
+  --bg: #fafafa; --surface: #ffffff; --subtle: #f4f4f5; --text: #0a0a0a; --muted: #71717a; --faint: #a1a1aa;
+  --border: #e4e4e7; --ring: #d4d4d8;
+  --pass: #16a34a; --pass-bg: #f0fdf4; --fail: #dc2626; --fail-bg: #fef2f2; --block: #d97706; --block-bg: #fffbeb;
+  --skip: #a1a1aa; --skip-bg: #f4f4f5;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #09090b; --surface: #0f0f11; --subtle: #18181b; --text: #fafafa; --muted: #a1a1aa; --faint: #71717a;
+    --border: #27272a; --ring: #3f3f46;
+    --pass: #22c55e; --pass-bg: rgba(34, 197, 94, 0.1); --fail: #f87171; --fail-bg: rgba(248, 113, 113, 0.1);
+    --block: #fbbf24; --block-bg: rgba(251, 191, 36, 0.1); --skip: #71717a; --skip-bg: #18181b;
+  }
+}
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, sans-serif; }
-main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
-h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 40px 0 12px; } h3 { font-size: 15px; margin: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.55 var(--sans);
+  -webkit-font-smoothing: antialiased; font-feature-settings: "ss01", "cv11"; }
+main { max-width: 1040px; margin: 0 auto; padding: 0 20px 80px; }
+a { color: inherit; text-underline-offset: 3px; text-decoration-color: var(--ring); }
+a:hover { text-decoration-color: currentColor; }
+code, pre, .mono { font-family: var(--mono); font-size: 12.5px; }
 .muted { color: var(--muted); }
-.counts { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
-.count { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; min-width: 110px; }
-.count strong { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
-dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
-.status { font-weight: 600; } .passed { color: var(--pass); } .failed { color: var(--fail); } .blocked { color: var(--block); }
-.check { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
-.check header { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
-pre { background: var(--code); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
-code { font-size: 13px; }
-.evidence { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
-.evidence img, .evidence video { max-width: 100%; width: 420px; border: 1px solid var(--border); border-radius: 6px; }
-ul { padding-left: 20px; } a { color: inherit; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px 0;
+  border-bottom: 1px solid var(--border); margin-bottom: 36px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 600; letter-spacing: -0.01em; }
+.brand svg { width: 18px; height: 18px; }
+.topbar .mono { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; border: 1px solid transparent; white-space: nowrap; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.passed { color: var(--pass); background: var(--pass-bg); }
+.pill.failed { color: var(--fail); background: var(--fail-bg); }
+.pill.blocked { color: var(--block); background: var(--block-bg); }
+.hero h1 { font-size: 30px; line-height: 1.15; letter-spacing: -0.03em; font-weight: 600; margin: 14px 0 6px; }
+.hero .url { font-family: var(--mono); font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.summary { margin: 28px 0 16px; overflow: hidden; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.stat { padding: 18px 20px; }
+.stat + .stat { border-left: 1px solid var(--border); }
+.stat .label { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.stat .label i { width: 8px; height: 8px; border-radius: 2px; }
+.stat .value { display: block; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; margin-top: 2px;
+  font-variant-numeric: tabular-nums; }
+.bar { display: flex; height: 6px; gap: 3px; margin: 2px 20px 20px; }
+.bar span { border-radius: 999px; min-width: 6px; }
+.passed-bg { background: var(--pass); } .failed-bg { background: var(--fail); }
+.blocked-bg { background: var(--block); } .skipped-bg { background: var(--skip); }
+.meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 40px; }
+.meta div { padding: 14px 20px; border-top: 1px solid var(--border); min-width: 0; }
+.meta div:nth-child(-n+3) { border-top: 0; }
+.meta div:not(:nth-child(3n+1)) { border-left: 1px solid var(--border); }
+.meta dt { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+.meta dd { margin: 0; overflow-wrap: anywhere; }
+section { margin-top: 40px; }
+section > h2 { display: flex; align-items: baseline; gap: 8px; font-size: 16px; font-weight: 600;
+  letter-spacing: -0.01em; margin: 0 0 12px; }
+section > h2 .count { color: var(--muted); font-weight: 400; font-size: 14px; }
+.list { overflow: hidden; }
+.check + .check { border-top: 1px solid var(--border); }
+.check > summary { list-style: none; display: grid; grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center; gap: 12px; padding: 14px 18px; cursor: pointer; }
+.check > summary::-webkit-details-marker { display: none; }
+.check > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+@media (hover: hover) and (pointer: fine) { .check > summary { transition: background-color 150ms ease; }
+  .check > summary:hover { background: var(--subtle); } }
+.icon { width: 20px; height: 20px; }
+.icon.passed { color: var(--pass); } .icon.failed { color: var(--fail); } .icon.blocked { color: var(--block); }
+.title { min-width: 0; }
+.title strong { font-weight: 500; display: block; overflow-wrap: anywhere; }
+.title .path { display: block; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.aside { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; }
+.chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--subtle); color: var(--muted); font-size: 12px; white-space: nowrap; }
+.chip.warn { color: var(--block); border-color: transparent; background: var(--block-bg); }
+.duration { font-family: var(--mono); font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
+.chevron { width: 16px; height: 16px; color: var(--faint); transition: transform 200ms var(--ease-out); }
+.check[open] .chevron { transform: rotate(90deg); }
+.body { padding: 2px 18px 18px 50px; }
+.body .row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; margin: 10px 0; }
+.body .row > span:first-child { color: var(--muted); font-size: 12.5px; padding-top: 1px; }
+pre { margin: 0; background: var(--subtle); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px;
+  overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6; }
+.attempts { display: flex; flex-wrap: wrap; gap: 6px; }
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-top: 14px; }
+.shot { display: block; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--subtle);
+  text-decoration: none; }
+.shot img, .shot video { display: block; width: 100%; height: auto; }
+.shot figcaption { padding: 8px 10px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border);
+  background: var(--surface); }
+.files { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.file { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 12px;
+  border: 1px solid var(--border); border-radius: 8px; }
+.file code { color: var(--muted); }
+.empty { color: var(--muted); padding: 18px 20px; }
+.items { list-style: none; margin: 0; padding: 0; }
+.items li { padding: 12px 20px; display: grid; gap: 2px; }
+.items li + li { border-top: 1px solid var(--border); }
+.items .reason { color: var(--muted); font-size: 13px; }
+.callout { border-color: color-mix(in srgb, var(--fail) 35%, var(--border)); background: var(--fail-bg); }
+.callout li { color: var(--text); }
+footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap;
+  gap: 8px 18px; color: var(--muted); font-size: 13px; }
+@media (max-width: 720px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { border-left: 0; }
+  .stat:nth-child(n+3) { border-top: 1px solid var(--border); }
+  .meta { grid-template-columns: minmax(0, 1fr); }
+  .meta div { border-left: 0 !important; border-top: 1px solid var(--border) !important; }
+  .meta div:first-child { border-top: 0 !important; }
+  .check > summary { grid-template-columns: 20px minmax(0, 1fr); }
+  .aside { grid-column: 2; flex-wrap: wrap; min-width: 0; }
+  .aside .chip { display: inline-block; line-height: 20px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+  .body { padding-left: 18px; }
+  .body .row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .chevron { transition: none; } }
 </style>
 </head>
 <body>
 <main>
-<h1>Verification <span class="failed">failed</span></h1>
-<p class="muted">https://preview.example.com/?token=REDACTED</p>
-<div class="counts">
-<div class="count"><strong class="passed">1</strong>passed</div>
-<div class="count"><strong class="failed">1</strong>failed</div>
-<div class="count"><strong class="blocked">0</strong>blocked</div>
-<div class="count"><strong>1</strong>not tested</div>
+<header class="topbar"><span class="brand"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="4" fill="currentColor"/><path d="m5.5 9.2 2.2 2.2 4.8-5" fill="none" stroke="var(--bg)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>katalepsis</span><span class="mono">2026-01-01T00-00-00-000Z-abcdef</span></header>
+<div class="hero">
+<span class="pill failed">Failed</span>
+<h1>1 of 2 checks passed</h1>
+<div class="url">https://preview.example.com/?token=REDACTED</div>
 </div>
-<dl>
-<dt>Commit</dt><dd>unknown</dd>
-<dt>Repository</dt><dd>unknown</dd>
-<dt>Started</dt><dd>2026-01-01T00:00:00.000Z</dd>
-<dt>Duration</dt><dd>5.0 s</dd>
-<dt>Runner</dt><dd>katalepsis 0.1.0, Playwright 1.63.0, Node 22.12.0</dd>
-<dt>Run ID</dt><dd><code>2026-01-01T00-00-00-000Z-abcdef</code></dd>
+<div class="card summary">
+<div class="stats"><div class="stat"><span class="label"><i class="passed-bg"></i>Passed</span><span class="value">1</span></div><div class="stat"><span class="label"><i class="failed-bg"></i>Failed</span><span class="value">1</span></div><div class="stat"><span class="label"><i class="blocked-bg"></i>Blocked</span><span class="value">0</span></div><div class="stat"><span class="label"><i class="skipped-bg"></i>Not tested</span><span class="value">1</span></div></div>
+<div class="bar" aria-hidden="true"><span class="passed-bg" style="flex:1"></span><span class="failed-bg" style="flex:1"></span><span class="skipped-bg" style="flex:1"></span></div>
+</div>
+<dl class="card meta">
+<div><dt>Commit</dt><dd>unknown</dd></div>
+<div><dt>Repository</dt><dd>unknown</dd></div>
+<div><dt>Duration</dt><dd>5.0 s</dd></div>
+<div><dt>Started</dt><dd>2026-01-01T00:00:00.000Z</dd></div>
+<div><dt>Model</dt><dd>None</dd></div>
+<div><dt>Runner</dt><dd>katalepsis 0.1.0 · Playwright 1.63.0 · Node 22.12.0</dd></div>
 </dl>
-<h2>Checks</h2>
-<article class="check">
-<header><span class="status failed">Failed</span>
-<h3>signup › empty submission</h3>
-<span class="muted">chromium · signup.spec.ts:13 · 240 ms</span></header>
-<p><span class="muted">Expected:</span> Test passes</p><pre>expect(locator).toHaveText(expected) failed
-Received: &quot;&lt;img src=x onerror=alert(1)&gt;&quot;</pre><div class="evidence"><a href="evidence/bbbbbbbbbbbb/retry-0-screenshot.png"><img src="evidence/bbbbbbbbbbbb/retry-0-screenshot.png" alt="Screenshot (screenshot, retry 0)" loading="lazy"></a></div>
-</article>
-<article class="check">
-<header><span class="status passed">Passed</span>
-<h3>signup › valid submission</h3>
-<span class="muted">chromium · signup.spec.ts:13 · 240 ms</span></header>
+<section><h2>Checks <span class="count">2</span></h2>
+<div class="card list"><details class="check" open>
+<summary><svg class="icon failed" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m7.4 7.4 5.2 5.2m0-5.2-5.2 5.2"/></svg><span class="title"><span class="sr-only">Failed: </span><strong>empty submission</strong><span class="path">signup</span></span><span class="aside"><span class="chip">chromium</span><span class="duration">240 ms</span><svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></span></summary>
+<div class="body"><div class="row"><span>Expected</span><span>Test passes</span></div><div class="row"><span>Observed</span><pre>expect(locator).toHaveText(expected) failed
+Received: &quot;&lt;img src=x onerror=alert(1)&gt;&quot;</pre></div><div class="row"><span>Location</span><span class="mono">signup.spec.ts:13</span></div><div class="gallery"><a class="shot" href="evidence/bbbbbbbbbbbb/retry-0-screenshot.png"><figure style="margin:0"><img src="evidence/bbbbbbbbbbbb/retry-0-screenshot.png" alt="Screenshot, screenshot · attempt 1" loading="lazy"><figcaption>screenshot · attempt 1</figcaption></figure></a></div></div>
+</details>
+<details class="check">
+<summary><svg class="icon passed" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="10" cy="10" r="8"/><path d="m6.5 10.2 2.3 2.3 4.7-4.9"/></svg><span class="title"><span class="sr-only">Passed: </span><strong>valid submission</strong><span class="path">signup</span></span><span class="aside"><span class="chip">chromium</span><span class="duration">240 ms</span><svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 4 4 4-4 4"/></svg></span></summary>
+<div class="body"><div class="row"><span>Location</span><span class="mono">signup.spec.ts:13</span></div></div>
+</details></div>
+</section>
+<section><h2>Not tested <span class="count">1</span></h2><div class="card"><ul class="items"><li><span>signup › pipes | in &lt;title&gt; <span class="chip">chromium</span></span><span class="reason">Excluded by the --project or --grep filter</span></li></ul></div></section>
 
-</article>
-<h2>Not tested</h2>
-<ul><li>signup › pipes | in &lt;title&gt; <span class="muted">(chromium)</span>: Excluded by the --project or --grep filter</li></ul>
-<h2>Limitations</h2>
-<ul><li>Commit is unknown: the project directory is not a git checkout with a commit.</li></ul>
-
-<h2>Files</h2>
-<p><a href="manifest.json">manifest.json</a> · <a href="report.md">report.md</a></p>
+<section><h2>Limitations</h2><div class="card"><ul class="items"><li>Commit is unknown: the project directory is not a git checkout with a commit.</li></ul></div></section>
+<footer><a href="manifest.json">manifest.json</a><a href="report.md">report.md</a><span>local</span></footer>
 </main>
 </body>
 </html>
