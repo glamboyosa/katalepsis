@@ -209,6 +209,9 @@ h1 {
   font-size: 0.86rem;
 }
 .command b {
+  /* Wide enough for the longest label, "select it", so swapping labels never moves the layout. */
+  min-width: 10.5ch;
+  text-align: left;
   color: var(--dim);
   font: 600 0.7rem/1 var(--font-mono);
   text-transform: uppercase;
@@ -335,14 +338,14 @@ h1 {
 .c3 {
   --resolve: 2.1s;
   top: 470px;
-  right: calc(50% + 282px);
+  right: calc(50% + 298px);
   animation-delay: 0.4s, -5s;
   opacity: 0.8;
 }
 .c5 {
   --resolve: 2.5s;
   top: 470px;
-  left: calc(50% + 282px);
+  left: calc(50% + 298px);
   animation-delay: 0.7s, -7s;
   opacity: 0.75;
 }
