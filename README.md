@@ -175,3 +175,7 @@ apps/site              the landing page and the product video
 - [Contributing](CONTRIBUTING.md)
 
 </details>
+
+## License
+
+MIT. See [LICENSE](LICENSE).
