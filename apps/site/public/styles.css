@@ -236,31 +236,107 @@ h1 {
   font: 0.72rem/1.2 var(--font-mono);
   white-space: nowrap;
   backdrop-filter: blur(6px);
+  /* backwards, not both, so the hover transform below applies once the entrance ends. */
   animation:
-    chip-in 700ms var(--ease-out) both,
+    chip-in 700ms var(--ease-out) backwards,
     drift 9s ease-in-out infinite alternate;
+  transition:
+    transform 200ms var(--ease-out),
+    border-color 200ms ease;
+}
+/*
+ * Each chip arrives as a running check and then resolves to its result, the way a run does.
+ * It plays once per visit, so it can afford a little delight; the drift afterwards is slow
+ * and small enough to stay in the background.
+ */
+.chip .state {
+  display: inline-grid;
+  margin-right: 8px;
+}
+.chip .state b {
+  grid-area: 1 / 1;
+  margin: 0;
+  font-weight: 600;
+}
+.chip .running {
+  color: var(--dim);
+  animation:
+    pulse 900ms ease-in-out infinite alternate,
+    settle-out 260ms var(--ease-out) forwards;
+  animation-delay: 0s, var(--resolve);
+}
+.chip .state b:not(.running) {
+  opacity: 0;
+  animation: settle-in 320ms var(--ease-out) forwards;
+  animation-delay: var(--resolve);
+}
+.chip.is-fail {
+  --tint: var(--fail);
+}
+.chip.is-pass {
+  --tint: var(--pass);
+}
+.chip.is-block {
+  --tint: var(--block);
+}
+.chip.is-skip {
+  --tint: var(--line-strong);
+}
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--tint) 60%, var(--line-strong));
+  }
+}
+@keyframes pulse {
+  to {
+    opacity: 0.45;
+  }
+}
+@keyframes settle-out {
+  to {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(-4px);
+  }
+}
+@keyframes settle-in {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    filter: none;
+    transform: none;
+  }
 }
 .chip b {
   margin-right: 8px;
   font-weight: 600;
 }
 .c1 {
+  --resolve: 1.3s;
   top: 24px;
   left: 0;
   animation-delay: 0.1s, 0s;
 }
 .c2 {
+  --resolve: 1.7s;
   top: 24px;
   right: 0;
   animation-delay: 0.25s, -3s;
 }
 .c3 {
+  --resolve: 2.1s;
   top: 470px;
   left: -20px;
   animation-delay: 0.4s, -5s;
   opacity: 0.8;
 }
 .c5 {
+  --resolve: 2.5s;
   top: 470px;
   right: -20px;
   animation-delay: 0.7s, -7s;
@@ -587,8 +663,15 @@ h2 {
     scroll-behavior: auto;
   }
   .mark img,
-  .chip {
+  .chip,
+  .chip .state b {
     animation: none !important;
+  }
+  .chip .running {
+    opacity: 0;
+  }
+  .chip .state b:not(.running) {
+    opacity: 1;
   }
   .mark img {
     transform: translateX(-75%);
