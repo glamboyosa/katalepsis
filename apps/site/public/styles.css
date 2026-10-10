@@ -328,17 +328,21 @@ h1 {
   right: 0;
   animation-delay: 0.25s, -3s;
 }
+/*
+ * The lower chips sit beside the centred buttons. They are anchored to the centre, half the
+ * button row (about 250px) plus a gap away, so they can never slide under the buttons.
+ */
 .c3 {
   --resolve: 2.1s;
   top: 470px;
-  left: -20px;
+  right: calc(50% + 282px);
   animation-delay: 0.4s, -5s;
   opacity: 0.8;
 }
 .c5 {
   --resolve: 2.5s;
   top: 470px;
-  right: -20px;
+  left: calc(50% + 282px);
   animation-delay: 0.7s, -7s;
   opacity: 0.75;
 }
@@ -622,7 +626,8 @@ h2 {
   outline-offset: 3px;
 }
 
-@media (max-width: 1240px) {
+/* Below this width the anchored chips would run off the edge, so they are hidden. */
+@media (max-width: 1280px) {
   .chips {
     display: none;
   }
