@@ -1,0 +1,28 @@
+{
+  "name": "katalepsis-monorepo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b && tsc -p tsconfig.test.json && tsc -p apps/demo-form",
+    "lint": "oxlint --deny-warnings",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
+    "test": "vitest run --project unit",
+    "test:integration": "pnpm build && vitest run --project integration",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "test:live": "pnpm build && KATALEPSIS_LIVE=1 node --env-file-if-exists=.env.local node_modules/vitest/vitest.mjs run --project live",
+    "mcp:demo": "pnpm build && node packages/mcp/scripts/demo-client.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "oxfmt": "0.72.0",
+    "oxlint": "1.87.0",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@10.17.1"
+}

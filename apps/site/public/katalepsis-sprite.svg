@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32" shape-rendering="crispEdges">
+  <defs>
+    <g id="window">
+      <path fill="#c3cbc5" d="M6 9h22v19H6z"/>
+      <path fill="#1d2321" d="M4 7h22v19H4z"/>
+      <path fill="#fbfbf8" d="M5 11h20v14H5z"/>
+      <path fill="#2f7d6d" d="M6 8h1v1H6z"/>
+      <path fill="#b5862a" d="M8 8h1v1H8z"/>
+      <path fill="#b4412f" d="M10 8h1v1h-1z"/>
+    </g>
+    <g id="lens">
+      <path fill="#d4e6df" d="M20 17h3v1h1v3h-1v1h-3v-1h-1v-3h1z"/>
+      <path fill="#1d2321" d="M20 16h3v1h-3zM19 17h1v1h-1zM23 17h1v1h-1zM18 18h1v3h-1zM24 18h1v3h-1zM19 21h1v1h-1zM23 21h1v1h-1zM20 22h3v1h-3z"/>
+      <path fill="#1d2321" d="M24 22h2v2h-2zM26 24h2v2h-2z"/>
+    </g>
+  </defs>
+  <!-- 1: a page under review -->
+  <g>
+    <use href="#window"/>
+    <path fill="#9aa39e" d="M7 14h13v1H7zM7 17h10v1H7zM7 20h12v1H7z"/>
+  </g>
+  <!-- 2: the lens arrives -->
+  <g transform="translate(32 0)">
+    <use href="#window"/>
+    <path fill="#9aa39e" d="M7 14h13v1H7zM7 17h10v1H7zM7 20h12v1H7z"/>
+    <use href="#lens"/>
+  </g>
+  <!-- 3: one line confirmed -->
+  <g transform="translate(64 0)">
+    <use href="#window"/>
+    <path fill="#2f7d6d" d="M7 14h13v1H7z"/>
+    <path fill="#9aa39e" d="M7 17h10v1H7zM7 20h12v1H7z"/>
+    <g transform="translate(-9 -2)"><use href="#lens"/></g>
+  </g>
+  <!-- 4: grasped: the check holds -->
+  <g transform="translate(96 0)">
+    <use href="#window"/>
+    <path fill="#2f7d6d" d="M7 14h13v1H7zM7 17h10v1H7zM7 20h6v1H7z"/>
+    <path fill="#1d2321" d="M17 17h11v11H17z"/>
+    <path fill="#2f7d6d" d="M18 18h9v9h-9z"/>
+    <path fill="#fbfbf8" d="M19 22h2v1h-2zM20 23h2v1h-2zM21 24h2v1h-2zM22 23h2v1h-2zM23 22h2v1h-2zM24 21h2v1h-2zM25 20h1v1h-1z"/>
+  </g>
+</svg>

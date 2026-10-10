@@ -1,0 +1,20 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/credentials"
+    },
+    {
+      "path": "packages/agent"
+    },
+    {
+      "path": "packages/cli"
+    },
+    {
+      "path": "packages/mcp"
+    }
+  ]
+}

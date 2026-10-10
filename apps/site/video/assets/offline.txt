@@ -1,0 +1,5 @@
+katalepsis: BLOCKED
+  0 passed, 0 failed, 3 blocked
+  preview-unavailable: http://127.0.0.1:4999/ did not respond (connect ECONNREFUSED 127.0.0.1:4999). No check was run.
+  Report: artifacts/katalepsis/2026-10-10T12-45-38-499Z-609ecf/report.html
+  Markdown: artifacts/katalepsis/2026-10-10T12-45-38-499Z-609ecf/report.md

@@ -1,0 +1,125 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderHtml > is deterministic 1`] = `
+"<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src 'self'; media-src 'self'; style-src 'unsafe-inline'">
+<title>katalepsis: Failed</title>
+<style>
+:root { color-scheme: light dark; --bg: #fafaf9; --surface: #ffffff; --text: #1c1917; --muted: #57534e; --border: #e7e5e4;
+  --pass: #15803d; --fail: #b91c1c; --block: #a16207; --code: #f5f5f4; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0c0a09; --surface: #1c1917; --text: #f5f5f4; --muted: #a8a29e;
+  --border: #292524; --pass: #4ade80; --fail: #f87171; --block: #facc15; --code: #292524; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, sans-serif; }
+main { max-width: 960px; margin: 0 auto; padding: 32px 16px 64px; }
+h1 { font-size: 24px; margin: 0 0 4px; } h2 { font-size: 18px; margin: 40px 0 12px; } h3 { font-size: 15px; margin: 0; }
+.muted { color: var(--muted); }
+.counts { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+.count { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; min-width: 110px; }
+.count strong { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 4px 16px; margin: 0; }
+dt { color: var(--muted); } dd { margin: 0; overflow-wrap: anywhere; }
+.status { font-weight: 600; } .passed { color: var(--pass); } .failed { color: var(--fail); } .blocked { color: var(--block); }
+.check { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin: 10px 0; }
+.check header { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+pre { background: var(--code); border-radius: 6px; padding: 10px 12px; overflow-x: auto; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+code { font-size: 13px; }
+.evidence { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.evidence img, .evidence video { max-width: 100%; width: 420px; border: 1px solid var(--border); border-radius: 6px; }
+ul { padding-left: 20px; } a { color: inherit; }
+</style>
+</head>
+<body>
+<main>
+<h1>Verification <span class="failed">failed</span></h1>
+<p class="muted">https://preview.example.com/?token=REDACTED</p>
+<div class="counts">
+<div class="count"><strong class="passed">1</strong>passed</div>
+<div class="count"><strong class="failed">1</strong>failed</div>
+<div class="count"><strong class="blocked">0</strong>blocked</div>
+<div class="count"><strong>1</strong>not tested</div>
+</div>
+<dl>
+<dt>Commit</dt><dd>unknown</dd>
+<dt>Repository</dt><dd>unknown</dd>
+<dt>Started</dt><dd>2026-01-01T00:00:00.000Z</dd>
+<dt>Duration</dt><dd>5.0 s</dd>
+<dt>Runner</dt><dd>katalepsis 0.1.0, Playwright 1.63.0, Node 22.12.0</dd>
+<dt>Run ID</dt><dd><code>2026-01-01T00-00-00-000Z-abcdef</code></dd>
+</dl>
+<h2>Checks</h2>
+<article class="check">
+<header><span class="status failed">Failed</span>
+<h3>signup › empty submission</h3>
+<span class="muted">chromium · signup.spec.ts:13 · 240 ms</span></header>
+<p><span class="muted">Expected:</span> Test passes</p><pre>expect(locator).toHaveText(expected) failed
+Received: &quot;&lt;img src=x onerror=alert(1)&gt;&quot;</pre><div class="evidence"><a href="evidence/bbbbbbbbbbbb/retry-0-screenshot.png"><img src="evidence/bbbbbbbbbbbb/retry-0-screenshot.png" alt="Screenshot (screenshot, retry 0)" loading="lazy"></a></div>
+</article>
+<article class="check">
+<header><span class="status passed">Passed</span>
+<h3>signup › valid submission</h3>
+<span class="muted">chromium · signup.spec.ts:13 · 240 ms</span></header>
+
+</article>
+<h2>Not tested</h2>
+<ul><li>signup › pipes | in &lt;title&gt; <span class="muted">(chromium)</span>: Excluded by the --project or --grep filter</li></ul>
+<h2>Limitations</h2>
+<ul><li>Commit is unknown: the project directory is not a git checkout with a commit.</li></ul>
+
+<h2>Files</h2>
+<p><a href="manifest.json">manifest.json</a> · <a href="report.md">report.md</a></p>
+</main>
+</body>
+</html>
+"
+`;
+
+exports[`renderMarkdown > is deterministic 1`] = `
+"# katalepsis report: Failed
+
+**1 passed, 1 failed, 0 blocked** out of 2 checks run. 1 declared tests were not run.
+
+- Preview: https://preview.example.com/?token=REDACTED
+- Commit: unknown
+- Started: 2026-01-01T00:00:00.000Z
+- Duration: 5.0 s
+- Runner: katalepsis 0.1.0, Playwright 1.63.0, Node 22.12.0
+
+## Checks
+
+| Status | Check | Project | Location | Duration |
+| --- | --- | --- | --- | --- |
+| Failed | signup › empty submission | chromium | signup.spec.ts:13 | 240 ms |
+| Passed | signup › valid submission | chromium | signup.spec.ts:13 | 240 ms |
+
+## Failures and blocked checks
+
+### Failed: signup › empty submission
+
+- Expected: Test passes
+- Location: signup.spec.ts:13
+- Failure type: assertion
+- Evidence: [screenshot](evidence/bbbbbbbbbbbb/retry-0-screenshot.png)
+
+Observed:
+
+\`\`\`text
+expect(locator).toHaveText(expected) failed
+Received: "<img src=x onerror=alert(1)>"
+\`\`\`
+
+## Not tested
+
+- signup › pipes \\| in \\<title\\> (chromium): Excluded by the --project or --grep filter
+
+## Limitations
+
+- Commit is unknown: the project directory is not a git checkout with a commit.
+
+Full report: [report.html](report.html). Manifest: [manifest.json](manifest.json).
+"
+`;

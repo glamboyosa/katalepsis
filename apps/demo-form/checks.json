@@ -1,0 +1,22 @@
+{
+  "checks": [
+    {
+      "id": "empty-form",
+      "name": "Empty form validation",
+      "intent": "Submit the signup form without filling it",
+      "passCondition": "A required-field error is visible"
+    },
+    {
+      "id": "valid-submission",
+      "name": "Valid submission",
+      "intent": "Fill the form with synthetic valid data and submit",
+      "passCondition": "A success confirmation is visible"
+    },
+    {
+      "id": "invalid-email",
+      "name": "Invalid email",
+      "intent": "Fill the name, enter an invalid email address and submit",
+      "passCondition": "An email validation error is visible and the success confirmation is not shown"
+    }
+  ]
+}

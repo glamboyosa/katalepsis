@@ -1,0 +1,230 @@
+{
+  "config": {
+    "argv": [
+      "/usr/local/bin/node",
+      "/fixture/demo-form/node_modules/@playwright/test/cli.js",
+      "test",
+      "--reporter=json",
+      "--output=/fixture/test-results"
+    ],
+    "configFile": "/fixture/demo-form/playwright.config.ts",
+    "rootDir": "/fixture/demo-form/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/fixture/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/fixture/demo-form/tests",
+        "testIgnore": [],
+        "testMatch": ["**/*.@(spec|test).?(c|m)[jt]s?(x)"],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [["json"]],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 4,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "signup.spec.ts",
+      "file": "signup.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "signup form",
+          "file": "signup.spec.ts",
+          "line": 3,
+          "column": 6,
+          "specs": [
+            {
+              "title": "empty submission shows a required-field error",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 2539,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert')\nExpected pattern: \u001b[32m/required/i\u001b[39m\nTimeout: 2000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('alert') with timeout 2000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert')\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert')\nExpected pattern: \u001b[32m/required/i\u001b[39m\nTimeout: 2000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('alert') with timeout 2000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert')\u001b[22m\n\n    at /fixture/demo-form/tests/signup.spec.ts:10:43",
+                        "location": {
+                          "file": "/fixture/demo-form/tests/signup.spec.ts",
+                          "column": 43,
+                          "line": 10
+                        },
+                        "snippet": "   8 |   test(\"empty submission shows a required-field error\", async ({ page }) => {\n   9 |     await page.getByRole(\"button\", { name: \"Sign up\" }).click();\n> 10 |     await expect(page.getByRole(\"alert\")).toHaveText(/required/i, { timeout: 2_000 });\n     |                                           ^\n  11 |   });\n  12 |\n  13 |   test(\"valid submission shows a confirmation\", async ({ page }) => {"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/fixture/demo-form/tests/signup.spec.ts",
+                            "column": 43,
+                            "line": 10
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('alert')\nExpected pattern: \u001b[32m/required/i\u001b[39m\nTimeout: 2000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" getByRole('alert') with timeout 2000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('alert')\u001b[22m\n\n\n   8 |   test(\"empty submission shows a required-field error\", async ({ page }) => {\n   9 |     await page.getByRole(\"button\", { name: \"Sign up\" }).click();\n> 10 |     await expect(page.getByRole(\"alert\")).toHaveText(/required/i, { timeout: 2_000 });\n     |                                           ^\n  11 |   });\n  12 |\n  13 |   test(\"valid submission shows a confirmation\", async ({ page }) => {\n    at /fixture/demo-form/tests/signup.spec.ts:10:43"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T11:32:07.480Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/fixture/test-results/signup-signup-form-empty-s-442c8-hows-a-required-field-error-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/fixture/test-results/signup-signup-form-empty-s-442c8-hows-a-required-field-error-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/fixture/test-results/signup-signup-form-empty-s-442c8-hows-a-required-field-error-chromium/error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "/fixture/test-results/signup-signup-form-empty-s-442c8-hows-a-required-field-error-chromium/trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/fixture/demo-form/tests/signup.spec.ts",
+                        "column": 43,
+                        "line": 10
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "e5334e3b62ca8fd4a4b6-0d9a45f0b1af3e2897cf",
+              "file": "signup.spec.ts",
+              "line": 8,
+              "column": 3
+            },
+            {
+              "title": "valid submission shows a confirmation",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 373,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T11:32:10.816Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e5334e3b62ca8fd4a4b6-76a1479519d848ce450a",
+              "file": "signup.spec.ts",
+              "line": 13,
+              "column": 3
+            },
+            {
+              "title": "malformed email shows an email error and does not submit",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 252,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-10T11:32:11.396Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "e5334e3b62ca8fd4a4b6-3b6e4660145a24c6c5ba",
+              "file": "signup.spec.ts",
+              "line": 20,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-10T11:32:07.201Z",
+    "duration": 4471.366,
+    "expected": 2,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

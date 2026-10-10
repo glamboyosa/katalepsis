@@ -1,0 +1,4 @@
+katalepsis: FAILED (openrouter/anthropic/claude-haiku-5.5)
+  2 passed, 1 failed, 0 blocked
+  Report: artifacts/katalepsis/2026-10-10T12-45-05-343Z-b51a0a/report.html
+  Markdown: artifacts/katalepsis/2026-10-10T12-45-05-343Z-b51a0a/report.md

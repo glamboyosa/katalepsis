@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09090b" />
+    <meta
+      name="description"
+      content="katalepsis runs your Playwright tests, or plain-English checks, against a preview deployment and gives you a report to paste into the pull request."
+    />
+    <meta property="og:title" content="katalepsis | Receipts for every preview" />
+    <meta
+      property="og:description"
+      content="Run your Playwright tests against a preview URL and paste the report into the pull request."
+    />
+    <meta property="og:type" content="website" />
+    <title>katalepsis | Receipts for every preview</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=swap"
+    />
+    <link rel="preload" as="image" href="/report.png" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="grid-bg" aria-hidden="true"></div>
+
+    <header class="nav wrap">
+      <a class="brand" href="/" aria-label="katalepsis home">
+        <span class="mark" aria-hidden="true"><img src="/katalepsis-sprite.svg" alt="" width="128" height="32" /></span>
+        katalepsis
+      </a>
+      <nav aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#agents">Agents</a>
+        <a class="pill-link" href="https://github.com/glamboyosa/katalepsis">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero wrap">
+        <ul class="chips" aria-hidden="true">
+          <li class="chip c1"><b class="fail">FAILED</b> empty submission shows a required-field error</li>
+          <li class="chip c2"><b class="pass">PASSED</b> valid submission shows a confirmation</li>
+          <li class="chip c3"><b class="block">BLOCKED</b> connect ECONNREFUSED 127.0.0.1:4999</li>
+          <li class="chip c5"><b class="muted">NOT TESTED</b> excluded by --grep</li>
+        </ul>
+
+        <h1>Receipts for<br />every preview.</h1>
+        <p class="lede">
+          katalepsis runs your Playwright tests, or checks written in plain English, against a preview deployment. You
+          get a report you can paste into the pull request: what passed, what broke, what couldn't run, and what nobody
+          tested.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/glamboyosa/katalepsis">Get it on GitHub</a>
+          <button
+            class="button command"
+            type="button"
+            data-copy="katalepsis run --url https://your-preview.example.com"
+          >
+            <span aria-hidden="true">$</span><code>katalepsis run --url …</code><b>copy</b>
+          </button>
+        </div>
+        <p class="small">Open source and local. Agent checks use your own key, and everything else needs none.</p>
+
+        <figure class="shot">
+          <div class="shot-bar" aria-hidden="true"><i></i><i></i><i></i><span>report.html</span></div>
+          <img
+            src="/report.png"
+            width="1100"
+            height="900"
+            alt="A real katalepsis report for the demo signup form: 2 passed, 1 failed, with the failing assertion and its screenshot"
+          />
+        </figure>
+      </section>
+
+      <section class="works wrap" aria-label="Built for">
+        <span>Built for</span>
+        <ul>
+          <li>Playwright</li>
+          <li>Claude Code</li>
+          <li>Codex</li>
+          <li>Cursor</li>
+          <li>OpenAI</li>
+          <li>OpenRouter</li>
+        </ul>
+      </section>
+
+      <section class="states wrap" aria-labelledby="states-title">
+        <h2 id="states-title">Every check ends up passed, failed, blocked or not tested</h2>
+        <p class="section-lede">
+          A green tick tells you nothing about what was skipped. katalepsis sorts every check into one of these.
+        </p>
+        <div class="state-grid">
+          <article>
+            <b class="dot pass"></b>
+            <h3>Passed</h3>
+            <p>Playwright said so, or an assertion in the browser did.</p>
+          </article>
+          <article>
+            <b class="dot fail"></b>
+            <h3>Failed</h3>
+            <p>
+              Something on the page was wrong. You get the assertion that caught it, plus the screenshot, video and
+              trace.
+            </p>
+          </article>
+          <article>
+            <b class="dot block"></b>
+            <h3>Blocked</h3>
+            <p>The preview was down or the browser wouldn't start. Not your app's fault, and not counted against it.</p>
+          </article>
+          <article>
+            <b class="dot"></b>
+            <h3>Not tested</h3>
+            <p>Skipped or filtered out. Listed by name, so nobody assumes it passed.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="split wrap" id="how">
+        <div class="copy">
+          <p class="eyebrow">Your tests</p>
+          <h2>Works with the Playwright tests you already have</h2>
+          <p>
+            Read the base URL from <code>KATALEPSIS_BASE_URL</code> and you're done. katalepsis uses your Playwright
+            install and your config, asks the preview if it's up before starting a browser, and bundles whatever
+            Playwright recorded.
+          </p>
+          <ul class="ticks">
+            <li>No new test format, no AI key</li>
+            <li><code>--grep</code> and <code>--project</code> work as usual</li>
+            <li>Every file in the bundle is listed with its SHA-256</li>
+          </ul>
+        </div>
+        <div class="window">
+          <div class="window-bar"><i></i><i></i><i></i><span>~/your-app</span></div>
+          <pre><span class="prompt">$</span> katalepsis run --url http://127.0.0.1:4173 --cwd apps/demo-form
+<span class="fail">katalepsis: FAILED</span>
+  <span class="pass">2 passed</span>, <span class="fail">1 failed</span>, <span class="block">0 blocked</span>, 0 not tested
+  Report: artifacts/katalepsis/2026-10-10T12-45-00-937Z-bcfc2b/report.html
+  Markdown: artifacts/katalepsis/2026-10-10T12-45-00-937Z-bcfc2b/report.md</pre>
+        </div>
+      </section>
+
+      <section class="split flip wrap">
+        <div class="copy">
+          <p class="eyebrow">Agent checks</p>
+          <h2>Agent checks only pass when the browser agrees</h2>
+          <p>
+            For the things nobody wrote a test for, describe what should happen. A model with your OpenAI or OpenRouter
+            key clicks through it in a real browser. To pass, it has to cite an assertion katalepsis ran that shows
+            something it changed. When one of the models we tested cited a heading that was already on the page, the
+            check was blocked.
+          </p>
+          <ul class="ticks">
+            <li>Keys stay in your keychain or environment</li>
+            <li>Caps on steps, tokens and time per check</li>
+            <li>The browser can't leave your preview's domain</li>
+          </ul>
+        </div>
+        <div class="stack">
+          <div class="window">
+            <div class="window-bar"><i></i><i></i><i></i><span>checks.json</span></div>
+            <pre>
+{
+  "id": "empty-form",
+  "intent": "Submit the signup form without filling it",
+  "passCondition": "A required-field error is visible"
+}</pre>
+          </div>
+          <div class="window">
+            <div class="window-bar"><i></i><i></i><i></i><span>openrouter / claude-haiku-5.5</span></div>
+            <pre><span class="fail">FAILED</span>  A cited assertion failed.
+- a1 FAILED: role "alert" is visible
+  (0 visible match(es) after waiting up to 3s)</pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="split wrap" id="agents">
+        <div class="copy">
+          <p class="eyebrow">MCP</p>
+          <h2>Your coding agent can check its own work</h2>
+          <p>
+            katalepsis runs as an MCP server, so Claude Code, Codex or Cursor can test a preview and read the report
+            without you in the loop. Same rules: the agent gets results, not a browser it can talk its way through.
+          </p>
+          <ul class="ticks">
+            <li>Three tools: run tests, run checks, read a report</li>
+            <li>Locked to one folder, one run at a time</li>
+            <li>Never takes a key as an argument</li>
+          </ul>
+        </div>
+        <div class="window">
+          <div class="window-bar"><i></i><i></i><i></i><span>codex exec</span></div>
+          <pre><span class="dim">user</span>
+Use the katalepsis MCP tool verification_run_tests with
+baseUrl http://127.0.0.1:4173/ . Then reply with only the
+runId, status and counts from the result.
+<span class="dim">mcp:</span> katalepsis/verification_run_tests started
+<span class="dim">mcp:</span> katalepsis/verification_run_tests <span class="pass">(completed)</span>
+<span class="dim">codex</span>
+{"runId":"2026-10-10T13-09-00-026Z-0aadc0","status":"<span class="fail">failed</span>",
+ "counts":{"passed":2,"failed":1,"blocked":0,"notTested":0}}</pre>
+        </div>
+      </section>
+
+      <section class="video wrap" aria-labelledby="video-title">
+        <div class="video-head">
+          <h2 id="video-title">47 seconds, all real output</h2>
+          <button type="button" class="speed" data-speed aria-label="Playback speed 1×. Switch to 2×">1×</button>
+        </div>
+        <video
+          controls
+          playsinline
+          preload="none"
+          poster="/katalepsis-demo-poster.png"
+          aria-label="katalepsis walkthrough"
+          data-video
+        >
+          <source src="/katalepsis-demo.mp4" type="video/mp4" />
+          Your browser does not play this video.
+        </video>
+      </section>
+
+      <section class="closing wrap">
+        <span class="mark mark-large" aria-hidden="true"
+          ><img src="/katalepsis-sprite.svg" alt="" width="128" height="32"
+        /></span>
+        <h2>Find out what the preview actually does</h2>
+        <p>
+          Katalepsis (κατάληψις) is the Stoics' word for grasping something so clearly you can't be wrong about it.
+          Seemed like a fair bar for a pull request.
+        </p>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/glamboyosa/katalepsis">Get it on GitHub</a>
+          <a class="button" href="https://github.com/glamboyosa/katalepsis/blob/main/docs/mcp.md">Set up MCP</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer wrap">
+      <span
+        >A project by <a href="https://glamboyosa.xyz" target="_blank" rel="noopener noreferrer">Osa Ogbemudia</a></span
+      >
+      <span>Built on Playwright, Effect and the AI SDK</span>
+    </footer>
+
+    <script src="/main.js" type="module"></script>
+  </body>
+</html>

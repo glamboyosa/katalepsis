@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Demo signup</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 28rem;
+        margin: 3rem auto;
+        padding: 0 1rem;
+      }
+      label {
+        display: block;
+        margin-top: 1rem;
+      }
+      input {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        font-size: 1rem;
+      }
+      button {
+        margin-top: 1.5rem;
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+      }
+      [role="alert"] {
+        color: #b00020;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Create an account</h1>
+      <form id="signup" novalidate>
+        <label for="name">Name</label>
+        <input id="name" name="name" autocomplete="name" />
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email" />
+        <p id="error" role="alert" hidden></p>
+        <button type="submit">Sign up</button>
+      </form>
+      <p id="success" role="status" hidden>Thanks, you're signed up.</p>
+    </main>
+    <script>
+      const form = document.getElementById("signup");
+      const error = document.getElementById("error");
+      const success = document.getElementById("success");
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      const showError = (message) => {
+        error.textContent = message;
+        error.hidden = false;
+      };
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        error.hidden = true;
+        const name = form.name.value.trim();
+        const email = form.email.value.trim();
+
+        // Deliberate fixture bug: an empty submission returns without telling the user.
+        if (!name || !email) return;
+
+        if (!emailPattern.test(email)) {
+          showError("Enter a valid email address.");
+          return;
+        }
+
+        form.hidden = true;
+        success.hidden = false;
+      });
+    </script>
+  </body>
+</html>
