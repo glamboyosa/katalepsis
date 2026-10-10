@@ -34,6 +34,8 @@ export type PlaywrightRunResult = {
   readonly exitCode: number | null;
   /** Combined stdout and stderr, truncated to the last 256 KiB. */
   readonly output: string;
+  /** Set when the run was cancelled or timed out but Playwright still wrote a partial report. */
+  readonly stoppedBy: PlaywrightProcessError | null;
 };
 
 export class PlaywrightRunner extends Context.Service<
@@ -90,10 +92,12 @@ const selectionArgs = (selection: PlaywrightSelection): Array<string> => [
 
 type ProcessResult = { readonly exitCode: number | null; readonly output: string };
 
-const KILL_GRACE_MS = 5_000;
+// Playwright needs time after SIGINT to stop workers, finish traces and videos, and write
+// its report, so it gets a generous grace period before SIGKILL.
+const KILL_GRACE_MS = 30_000;
 
 // On POSIX, Playwright runs as the leader of its own process group, which also holds its test
-// workers. Browsers and ffmpeg run in groups of their own: Playwright closes them on SIGTERM,
+// workers. Browsers and ffmpeg run in groups of their own: Playwright closes them on SIGINT,
 // and on SIGKILL they exit when their pipes to Playwright close. Windows has no process groups.
 const USE_PROCESS_GROUP = process.platform !== "win32";
 
@@ -118,8 +122,9 @@ const signalTree = (child: ChildProcess, signal: NodeJS.Signals): void => {
 };
 
 /**
- * Sends SIGTERM to Playwright's process tree, escalates to SIGKILL after a grace period,
- * waits for Playwright to exit, then kills anything it left behind.
+ * Sends SIGINT to Playwright's process tree, as Ctrl-C in a terminal would, so Playwright
+ * stops its workers and still writes the JSON report for the tests that finished. Escalates
+ * to SIGKILL after a grace period, waits for Playwright to exit, then kills anything left behind.
  */
 const terminate = (child: ChildProcess): Effect.Effect<void> =>
   Effect.callback<void>((resume) => {
@@ -134,7 +139,7 @@ const terminate = (child: ChildProcess): Effect.Effect<void> =>
       signalTree(child, "SIGKILL");
       resume(Effect.void);
     });
-    signalTree(child, "SIGTERM");
+    signalTree(child, "SIGINT");
   });
 
 /** Fails as soon as `signal` aborts. Racing against it interrupts the Playwright process. */
@@ -155,6 +160,8 @@ const runProcess = (
   env: NodeJS.ProcessEnv,
   timeoutMs: number,
   signal: AbortSignal,
+  /** Names the step in timeout errors, such as "Listing tests". */
+  step = "Playwright",
 ): Effect.Effect<ProcessResult, PlaywrightProcessError> =>
   Effect.suspend(() => {
     // Shared with the timeout and cancel paths so their errors keep Playwright's output.
@@ -193,8 +200,7 @@ const runProcess = (
       ),
       Effect.timeoutOrElse({
         duration: timeoutMs,
-        orElse: () =>
-          Effect.fail(processError(`Playwright did not finish within ${Math.round(timeoutMs / 1000)}s`, true)),
+        orElse: () => Effect.fail(processError(`${step} did not finish within ${Math.round(timeoutMs / 1000)}s`, true)),
       }),
       Effect.map((exitCode) => ({ exitCode, output: log.output })),
     );
@@ -233,6 +239,7 @@ export const PlaywrightRunnerLive = Layer.succeed(PlaywrightRunner, {
       { ...process.env, FORCE_COLOR: "0" },
       INSTALL_TIMEOUT_MS,
       signal,
+      "playwright install",
     ).pipe(
       Effect.flatMap((result) =>
         result.exitCode === 0
@@ -253,6 +260,7 @@ export const PlaywrightRunnerLive = Layer.succeed(PlaywrightRunner, {
       { ...baseEnv(selection.jsonFile), KATALEPSIS_BASE_URL: selection.baseUrl },
       LIST_TIMEOUT_MS,
       selection.signal,
+      "Listing tests with playwright test --list",
     ).pipe(Effect.flatMap((result) => readJsonReport(selection.jsonFile, result.output))),
   run: (options) =>
     runProcess(
@@ -262,9 +270,15 @@ export const PlaywrightRunnerLive = Layer.succeed(PlaywrightRunner, {
       options.timeoutMs,
       options.signal,
     ).pipe(
+      Effect.map((result): Omit<PlaywrightRunResult, "report"> => ({ ...result, stoppedBy: null })),
+      Effect.catchTag("PlaywrightProcessError", (error) =>
+        Effect.succeed({ exitCode: null, output: error.output, stoppedBy: error }),
+      ),
       Effect.flatMap((result) =>
         readJsonReport(options.jsonFile, result.output).pipe(
-          Effect.map((report) => ({ report, exitCode: result.exitCode, output: result.output })),
+          Effect.map((report): PlaywrightRunResult => ({ report, ...result })),
+          // Without a partial report, the reason Playwright stopped is the error to show.
+          Effect.mapError((readError) => result.stoppedBy ?? readError),
         ),
       ),
     ),

@@ -3,18 +3,21 @@ import { createRequire } from "node:module";
 import path from "node:path";
 import { chromium, type Browser } from "playwright-core";
 
-const MISSING_BROWSER = /Executable doesn't exist|browserType\.launch: .*(not found|install)/;
+// Only a browser that was never downloaded. Missing system libraries need install-deps instead.
+const MISSING_BROWSER = /Executable doesn't exist|Looks like Playwright was just installed or updated/;
 const INSTALL_TIMEOUT_MS = 15 * 60_000;
 
 /** Set this to stop katalepsis downloading Chromium for agent checks. */
 export const NO_DOWNLOAD_ENV = "KATALEPSIS_NO_BROWSER_DOWNLOAD";
 
-const installHeadlessShell = (): Promise<void> =>
+const installHeadlessShell = (signal: AbortSignal | undefined): Promise<void> =>
   new Promise((resolve, reject) => {
     const packageDir = path.dirname(createRequire(import.meta.url).resolve("playwright-core/package.json"));
     // stdout is reserved for the MCP protocol when this runs inside the MCP server.
     const child = spawn(process.execPath, [path.join(packageDir, "cli.js"), "install", "chromium-headless-shell"], {
       stdio: ["ignore", "pipe", "pipe"],
+      // A cancelled run or a closing MCP client stops the download instead of waiting for it.
+      ...(signal === undefined ? {} : { signal }),
     });
     child.stdout.pipe(process.stderr);
     child.stderr.pipe(process.stderr);
@@ -34,6 +37,7 @@ const installHeadlessShell = (): Promise<void> =>
  */
 export const launchAgentBrowser = async (
   env: Readonly<Record<string, string | undefined>> = process.env,
+  signal?: AbortSignal,
 ): Promise<Browser> => {
   try {
     return await chromium.launch();
@@ -46,7 +50,7 @@ export const launchAgentBrowser = async (
     console.error(
       "katalepsis: downloading Chromium for agent checks. This happens once and uses about 200 MB of disk.",
     );
-    await installHeadlessShell();
+    await installHeadlessShell(signal);
     return chromium.launch();
   }
 };

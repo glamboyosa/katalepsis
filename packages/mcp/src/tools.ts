@@ -1,4 +1,5 @@
 import { ChecksFile } from "@katalepsis/agent";
+import type { StandardSchemaWithJSON } from "@modelcontextprotocol/server";
 import { Schema } from "effect";
 
 // Tool inputs. optionalKey keeps unused fields out of the JSON Schema instead of advertising
@@ -34,7 +35,7 @@ export const GetReportInput = Schema.Struct({
 });
 export type GetReportInput = typeof GetReportInput.Type;
 
-/** Marks every object closed, matching the server, which rejects unknown keys. */
+/** Marks every object closed, matching the validator, which rejects unknown keys. */
 const closeObjects = (node: unknown): unknown => {
   if (Array.isArray(node)) return node.map(closeObjects);
   if (typeof node !== "object" || node === null) return node;
@@ -44,32 +45,53 @@ const closeObjects = (node: unknown): unknown => {
   return result;
 };
 
-const jsonSchema = (schema: Schema.Top): Record<string, unknown> => {
-  const document = Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.input({ target: "draft-07" });
+const closed = (document: Record<string, unknown>): Record<string, unknown> => {
   const { $schema: _ignored, ...rest } = closeObjects(document) as Record<string, unknown>;
   return rest;
 };
 
-export const TOOLS = [
-  {
-    name: "verification_run_tests",
+/**
+ * Turns an Effect Schema into the Standard Schema with JSON Schema that McpServer validates
+ * tool arguments with, so the server and the advertised schema share one definition.
+ */
+const toolInput = <S extends Schema.Codec<unknown, unknown>>(
+  schema: S,
+): StandardSchemaWithJSON<S["Encoded"], S["Type"]> => {
+  // Unknown keys are rejected, so a stray field such as an API key is never silently ignored.
+  const validation = Schema.toStandardSchemaV1(schema, { parseOptions: { onExcessProperty: "error" } })["~standard"];
+  const json = Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema;
+  return {
+    "~standard": {
+      ...validation,
+      jsonSchema: {
+        input: (options) => closed(json.input(options)),
+        output: (options) => closed(json.output(options)),
+      },
+    },
+  };
+};
+
+export const TOOLS = {
+  verification_run_tests: {
     title: "Run Playwright tests against a preview",
     description:
       "Runs the project's existing Playwright tests against a preview URL and writes a katalepsis report. Returns passed, failed, blocked and not-tested counts, each check's result and the report paths. Needs no AI key. Can take minutes. Set installBrowsers to run the project's own playwright install first, for example after a result says a browser could not start.",
-    inputSchema: jsonSchema(RunTestsInput),
+    inputSchema: toolInput(RunTestsInput),
+    // Writes a report folder and loads the preview, but changes nothing it did not create.
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
-  {
-    name: "verification_check_browser",
+  verification_check_browser: {
     title: "Run agent checks against a preview",
     description:
       "Runs plain-language checks in a real browser using the user's locally configured OpenAI or OpenRouter key. Each check needs id (lowercase letters, digits and hyphens, unique), name, intent and passCondition, and may set startPath (a path starting with /) and observeOnly. A check passes only when browser assertions prove it. Never pass API keys; they are read from the user's environment or keychain.",
-    inputSchema: jsonSchema(CheckBrowserInput),
+    inputSchema: toolInput(CheckBrowserInput),
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },
-  {
-    name: "verification_get_report",
+  verification_get_report: {
     title: "Read an existing katalepsis report",
     description:
       "Returns a report written by an earlier run: a summary, the Markdown report, or the full manifest. runId is the runId returned by the run tools, such as 2026-10-10T13-09-00-026Z-0aadc0.",
-    inputSchema: jsonSchema(GetReportInput),
+    inputSchema: toolInput(GetReportInput),
+    annotations: { readOnlyHint: true, openWorldHint: false },
   },
-] as const;
+} as const;

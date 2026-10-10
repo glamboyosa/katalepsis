@@ -9,7 +9,7 @@ import {
 } from "@katalepsis/credentials";
 import { listModels, validateModel } from "@katalepsis/agent";
 import { Effect } from "effect";
-import { EXIT } from "../exit-codes.ts";
+import { EXIT, UsageError } from "../exit-codes.ts";
 
 const run = <A>(effect: Effect.Effect<A, { readonly message: string }>): Promise<A> =>
   Effect.runPromise(effect.pipe(Effect.mapError((error) => new Error(error.message))));
@@ -20,9 +20,19 @@ const update = async (change: Partial<Preferences>): Promise<string> => {
 };
 
 export const configProviderCommand = async (value: string | undefined): Promise<number> => {
-  if (value === undefined || !isProvider(value)) throw new Error(`Name a provider: ${PROVIDERS.join(" or ")}.`);
-  const file = await update({ provider: value });
+  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(" or ")}.`);
+  const current = await run(loadPreferences(process.env));
+  // Model IDs differ between providers, so a model saved for another provider is dropped.
+  const keepModel = current.provider === value || current.provider === undefined;
+  const { model, ...rest } = current;
+  const next = keepModel ? { ...current, provider: value } : { ...rest, provider: value };
+  const file = await run(savePreferences(process.env, next));
   console.log(`Provider set to ${value} in ${file}.`);
+  if (!keepModel && model !== undefined) {
+    console.log(
+      `Cleared the ${current.provider} model ${model}. Choose one with \`katalepsis config model <model-id>\`.`,
+    );
+  }
   return EXIT.passed;
 };
 
@@ -32,7 +42,7 @@ export const configProviderCommand = async (value: string | undefined): Promise<
  */
 export const configModelCommand = async (value: string | undefined): Promise<number> => {
   if (value === undefined || value.trim() === "")
-    throw new Error("Name a model, for example from `katalepsis models <provider>`.");
+    throw new UsageError("Name a model, for example from `katalepsis models <provider>`.");
   const preferences = await run(loadPreferences(process.env));
   const provider = preferences.provider;
   if (provider === undefined)
@@ -63,7 +73,7 @@ export const configShowCommand = async (): Promise<number> => {
 
 /** Lists the provider's models, using the key when the catalog needs one. */
 export const modelsCommand = async (value: string | undefined): Promise<number> => {
-  if (value === undefined || !isProvider(value)) throw new Error(`Name a provider: ${PROVIDERS.join(" or ")}.`);
+  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(" or ")}.`);
   const credential = await run(resolveCredential(value, process.env).pipe(Effect.provide(KeychainLive)));
   if (value === "openai" && credential.key === null)
     throw new Error("Listing OpenAI models needs a key: `katalepsis auth set openai`.");

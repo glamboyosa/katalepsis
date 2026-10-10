@@ -8,10 +8,9 @@ import {
   VerificationRun,
   verifyWithPlaywright,
 } from "@katalepsis/core";
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, type CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer, type CallToolResult } from "@modelcontextprotocol/server";
 import { Effect, Layer, Schema } from "effect";
-import { CheckBrowserInput, GetReportInput, RunTestsInput, TOOLS } from "./tools.ts";
+import { TOOLS, type CheckBrowserInput, type GetReportInput, type RunTestsInput } from "./tools.ts";
 
 export type ServerOptions = {
   /** Every cwd a tool receives must resolve inside this directory. */
@@ -38,15 +37,6 @@ const ok = (summary: Record<string, unknown>): CallToolResult => ({
 });
 
 const failure = (message: string): CallToolResult => ({ content: [{ type: "text", text: message }], isError: true });
-
-const decode = <S extends Schema.Codec<unknown, unknown>>(schema: S, input: unknown): S["Type"] => {
-  try {
-    // Unknown keys are rejected, so a stray field such as an API key is never silently ignored.
-    return Schema.decodeUnknownSync(schema)(input ?? {}, { onExcessProperty: "error" });
-  } catch (error) {
-    throw new ToolError(`Invalid arguments: ${error instanceof Error ? error.message : String(error)}`);
-  }
-};
 
 /** Resolves a project directory and refuses anything outside the workspace root, symlinks included. */
 const projectDir = async (root: string, cwd: string | undefined): Promise<string> => {
@@ -114,6 +104,17 @@ const runEffect = <A>(effect: Effect.Effect<A, { readonly _tag: string; readonly
     throw error instanceof ToolError ? error : new ToolError(error instanceof Error ? error.message : String(error));
   });
 
+/** Turns a ToolError into a tool result the agent can read, and hides anything unexpected. */
+const guarded = async (work: () => Promise<CallToolResult>): Promise<CallToolResult> => {
+  try {
+    return await work();
+  } catch (error) {
+    if (error instanceof ToolError) return failure(error.message);
+    // Unexpected errors are reported without stack traces or internals.
+    return failure("katalepsis hit an internal error. Run the same check with the katalepsis CLI for details.");
+  }
+};
+
 const truncate = (text: string): string =>
   text.length > MAX_TEXT ? `${text.slice(0, MAX_TEXT)}\n… truncated; read the file for the rest.` : text;
 
@@ -122,17 +123,19 @@ const truncate = (text: string): string =>
  * runs one verification at a time, keeps every path inside the workspace root, and never
  * accepts credentials as arguments: agent checks use the local environment or keychain.
  *
- * It uses the SDK's lower-level Server so tool inputs are validated with Effect Schema,
- * like the rest of katalepsis, instead of the zod schemas McpServer requires.
+ * Tool arguments are validated by McpServer against Effect Schemas, see tools.ts.
  */
 export type KatalepsisServer = {
-  readonly server: Server;
+  /**
+   * Builds an McpServer with the katalepsis tools. serveStdio calls it once per connection
+   * era, and every server it builds shares the one-run-at-a-time lock.
+   */
+  readonly factory: () => McpServer;
   /** Resolves once no run is in progress, so the process can exit after a run has cleaned up. */
   readonly idle: () => Promise<void>;
 };
 
 export const createServer = (options: ServerOptions): KatalepsisServer => {
-  const server = new Server({ name: "katalepsis", version: options.version }, { capabilities: { tools: {} } });
   let current: { readonly startedAt: Date; readonly done: Promise<unknown> } | null = null;
 
   const exclusive = (work: () => Promise<CallToolResult>): Promise<CallToolResult> => {
@@ -149,10 +152,9 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
     return done;
   };
 
-  // Arguments are checked before taking the lock, so a bad call is answered at once.
-  const runTests = (args: unknown, signal: AbortSignal) => {
-    const input = decode(RunTestsInput, args);
-    return exclusive(async () => {
+  // The SDK validates arguments before the handler runs, so a bad call never takes the lock.
+  const runTests = (input: RunTestsInput, signal: AbortSignal) =>
+    exclusive(async () => {
       const cwd = await projectDir(options.root, input.cwd);
       const { run, bundleDir } = await runEffect(
         verifyWithPlaywright({
@@ -171,11 +173,9 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
       );
       return ok(summarize(run, bundleDir));
     });
-  };
 
-  const checkBrowser = (args: unknown, signal: AbortSignal) => {
-    const input = decode(CheckBrowserInput, args);
-    return exclusive(async () => {
+  const checkBrowser = (input: CheckBrowserInput, signal: AbortSignal) =>
+    exclusive(async () => {
       const cwd = await projectDir(options.root, input.cwd);
       const { run, bundleDir } = await runEffect(
         verifyWithAgent({
@@ -195,10 +195,8 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
       );
       return ok(summarize(run, bundleDir));
     });
-  };
 
-  const getReport = async (args: unknown): Promise<CallToolResult> => {
-    const input = decode(GetReportInput, args);
+  const getReport = async (input: GetReportInput): Promise<CallToolResult> => {
     const cwd = await projectDir(options.root, input.cwd);
     const reports = await reportsDir(cwd);
     const bundleDir = path.join(reports, input.runId);
@@ -219,27 +217,22 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
     return { content: [{ type: "text", text: truncate(text) }] };
   };
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [...TOOLS] }));
-  server.setRequestHandler(CallToolRequestSchema, async (request, extra) => {
-    try {
-      switch (request.params.name) {
-        case "verification_run_tests":
-          return await runTests(request.params.arguments, extra.signal);
-        case "verification_check_browser":
-          return await checkBrowser(request.params.arguments, extra.signal);
-        case "verification_get_report":
-          return await getReport(request.params.arguments);
-        default:
-          return failure(`Unknown tool: ${request.params.name}`);
-      }
-    } catch (error) {
-      if (error instanceof ToolError) return failure(error.message);
-      // Unexpected errors are reported without stack traces or internals.
-      return failure("katalepsis hit an internal error. Run the same check with the katalepsis CLI for details.");
-    }
-  });
+  const factory = (): McpServer => {
+    const server = new McpServer({ name: "katalepsis", version: options.version });
+    server.registerTool("verification_run_tests", TOOLS.verification_run_tests, (input, ctx) =>
+      guarded(() => runTests(input, ctx.mcpReq.signal)),
+    );
+    server.registerTool("verification_check_browser", TOOLS.verification_check_browser, (input, ctx) =>
+      guarded(() => checkBrowser(input, ctx.mcpReq.signal)),
+    );
+    server.registerTool("verification_get_report", TOOLS.verification_get_report, (input) =>
+      guarded(() => getReport(input)),
+    );
+    return server;
+  };
+
   return {
-    server,
+    factory,
     idle: async () => {
       await current?.done.catch(() => undefined);
     },

@@ -43,10 +43,20 @@ const schema = <S extends Schema.Codec<unknown, unknown>>(value: S): FlexibleSch
 const Role = Schema.Literals(ROLES);
 // optionalKey, not optional: optional advertises null in the JSON Schema but rejects it,
 // so a model that sends null for an unused field would fail validation.
+// Field descriptions follow Anthropic's advice to document tools as carefully as prompts
+// (https://www.anthropic.com/engineering/building-effective-agents): each says how it combines.
 const TargetFields = {
-  role: Schema.optionalKey(Role),
-  name: Schema.optionalKey(Schema.String),
-  text: Schema.optionalKey(Schema.String),
+  role: Schema.optionalKey(
+    Role.annotate({ description: "ARIA role from the snapshot, such as button, heading, alert or status." }),
+  ),
+  name: Schema.optionalKey(
+    Schema.String.annotate({ description: "Accessible name as the snapshot shows it after the role." }),
+  ),
+  text: Schema.optionalKey(
+    Schema.String.annotate({
+      description: "Visible text. With a role, the element of that role showing this text; alone, any element.",
+    }),
+  ),
 };
 
 // Effect renders an empty struct as "anything but null"; OpenAI requires an object schema.
@@ -58,6 +68,7 @@ To decide the result you must call assert. The assertion runs in the browser and
 Assert the pass condition directly: for "an error is visible", assert the error message itself.
 Assertions match exactly. After acting, take a snapshot and copy the element's full text or accessible name from it; do not guess wording.
 Do not cite anything that was already on the page before you acted, such as a heading or a field label.
+Short-lived confirmations such as "copied" or a toast can disappear within a second or two. If the page already shows the wording, call the action and assert in the same step so the assertion runs straight after the action.
 When you are done, call finish exactly once with your verdict and the IDs of the assertions that support it:
 - passed: every cited assertion passed and together they show the pass condition holds;
 - failed: a cited assertion failed and shows the pass condition does not hold;

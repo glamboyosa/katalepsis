@@ -5,8 +5,10 @@ import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
+import { Client as LegacyClient } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport as LegacyStdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const repoRoot = fileURLToPath(new URL("../../../", import.meta.url));
@@ -41,8 +43,12 @@ const leftoverBrowsers = async (baseline: ReadonlySet<string>): Promise<Array<st
   return [...browserProcesses()].filter((pid) => !baseline.has(pid));
 };
 
+/** Connects on the 2026-07-28 revision, with no fallback, so the test fails if the server stops offering it. */
 const connect = async (root: string, home: string): Promise<Client> => {
-  const created = new Client({ name: "katalepsis-test-client", version: "0.0.0" });
+  const created = new Client(
+    { name: "katalepsis-test-client", version: "0.0.0" },
+    { versionNegotiation: { mode: { pin: "2026-07-28" } } },
+  );
   await created.connect(
     new StdioClientTransport({
       command: process.execPath,
@@ -75,7 +81,7 @@ let home: string;
 let client: Client;
 
 const call = async (name: string, args: Record<string, unknown>): Promise<ToolResult> =>
-  (await client.callTool({ name, arguments: args }, undefined, { timeout: 120_000 })) as ToolResult;
+  (await client.callTool({ name, arguments: args }, { timeout: 120_000 })) as ToolResult;
 
 beforeAll(async () => {
   const port = await freePort();
@@ -148,7 +154,8 @@ describe("katalepsis MCP server", () => {
   it("rejects invalid arguments without running anything", async () => {
     const result = await call("verification_get_report", { runId: "../../etc" });
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toMatch(/^Invalid arguments/);
+    expect(result.content[0]?.text).toMatch(/^Input validation error: Invalid arguments/);
+    expect(result.content[0]?.text).toContain("runId");
   });
 
   it("runs one verification at a time", async () => {
@@ -163,7 +170,8 @@ describe("katalepsis MCP server", () => {
   it("rejects unknown arguments instead of ignoring them", async () => {
     const result = await call("verification_run_tests", { baseUrl, apiKey: "sk-should-not-be-here" });
     expect(result.isError).toBe(true);
-    expect(result.content[0]?.text).toMatch(/^Invalid arguments/);
+    expect(result.content[0]?.text).toMatch(/^Input validation error: Invalid arguments/);
+    expect(result.content[0]?.text).toContain("apiKey");
     expect(result.content[0]?.text).not.toContain("sk-should-not-be-here");
   });
 
@@ -176,10 +184,13 @@ describe("katalepsis MCP server", () => {
 
   it("stops a run the client cancels and still writes a blocked report", async () => {
     const controller = new AbortController();
-    const pending = client.callTool({ name: "verification_run_tests", arguments: { baseUrl } }, undefined, {
-      signal: controller.signal,
-      timeout: 120_000,
-    });
+    const pending = client.callTool(
+      { name: "verification_run_tests", arguments: { baseUrl } },
+      {
+        signal: controller.signal,
+        timeout: 120_000,
+      },
+    );
     await new Promise((resolve) => setTimeout(resolve, 1500));
     controller.abort();
     await expect(pending).rejects.toThrow(/abort/i);
@@ -266,5 +277,34 @@ describe("katalepsis MCP server containment", () => {
     const manifest = JSON.parse(manifestText);
     expect(manifest.status).toBe("blocked");
     expect(JSON.stringify(manifest.errors)).toContain("cancelled");
+  });
+});
+
+describe("katalepsis MCP server with a client on the 2025 protocol", () => {
+  it("still serves clients that connect with the initialize handshake", async () => {
+    const legacy = new LegacyClient({ name: "katalepsis-legacy-client", version: "0.0.0" });
+    await legacy.connect(
+      new LegacyStdioClientTransport({
+        command: process.execPath,
+        args: [serverMain, "--root", demo],
+        env: { ...safeEnv(), KATALEPSIS_HOME: home },
+        stderr: "pipe",
+      }),
+    );
+    const { tools } = await legacy.listTools();
+    expect(tools.map((tool) => tool.name)).toContain("verification_run_tests");
+
+    const result = (await legacy.callTool({ name: "verification_run_tests", arguments: { baseUrl } }, undefined, {
+      timeout: 120_000,
+    })) as ToolResult;
+    expect(result.structuredContent?.["counts"]).toEqual({ passed: 2, failed: 1, blocked: 0, notTested: 0 });
+
+    const invalid = (await legacy.callTool({
+      name: "verification_run_tests",
+      arguments: { baseUrl, apiKey: "sk-should-not-be-here" },
+    })) as ToolResult;
+    expect(invalid.isError).toBe(true);
+    expect(invalid.content[0]?.text).not.toContain("sk-should-not-be-here");
+    await legacy.close();
   });
 });

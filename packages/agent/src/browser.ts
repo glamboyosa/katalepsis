@@ -40,9 +40,13 @@ const ASSERT_TIMEOUT_MS = 3_000;
 const SNAPSHOT_LIMIT = 6_000;
 const POLL_MS = 100;
 
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const describeTarget = (target: Target): string => {
   if (target.role !== undefined) {
-    return target.name === undefined ? `role "${target.role}"` : `role "${target.role}" named "${target.name}"`;
+    const named = target.name === undefined ? `role "${target.role}"` : `role "${target.role}" named "${target.name}"`;
+    if (target.text === undefined) return named;
+    return target.name === undefined ? `${named} with text "${target.text}"` : `${named} containing "${target.text}"`;
   }
   return target.text === undefined ? "the page" : `text "${target.text}"`;
 };
@@ -101,10 +105,13 @@ export class CheckSession {
     allowedOrigins: ReadonlyArray<string>,
     scratchDir: string,
   ): Promise<CheckSession> {
-    const context = await browser.newContext();
+    // Copy buttons only confirm once the clipboard write succeeds, which headless Chromium
+    // refuses without this permission, so a working button would otherwise look broken.
+    const contextOptions = { permissions: ["clipboard-read", "clipboard-write"] };
+    const context = await browser.newContext(contextOptions);
     await context.tracing.start({ screenshots: true, snapshots: true });
     const page = await context.newPage();
-    const baselineContext = await browser.newContext();
+    const baselineContext = await browser.newContext(contextOptions);
     const baselinePage = await baselineContext.newPage();
     const session = new CheckSession(
       context,
@@ -189,7 +196,22 @@ export class CheckSession {
    */
   private locate(target: Target, exact = false, page: Page = this.page): Locator {
     if (target.role !== undefined) {
-      return page.getByRole(target.role, target.name === undefined ? {} : { name: target.name, exact });
+      const byRole = page.getByRole(target.role, target.name === undefined ? {} : { name: target.name, exact });
+      if (target.text === undefined) return byRole;
+      const text = target.text;
+      // Exact here means the whole phrase, not part of a word: a dialog can hold its message
+      // beside buttons, and a list item its label beside a price. A RegExp skips Playwright's
+      // whitespace normalisation, so any run of spaces, line breaks or NBSPs matches.
+      const phrase = new RegExp(
+        `(?<![\\p{L}\\p{N}])${escapeRegExp(text.trim()).replace(/\s+/g, "\\s+")}(?![\\p{L}\\p{N}])`,
+        "u",
+      );
+      const showsText = (locator: Locator): Locator => locator.filter({ hasText: exact ? phrase : text });
+      if (target.name !== undefined) return showsText(byRole);
+      // Models often give a role with its text and no name. Ignoring the text would match the
+      // first element with that role. Buttons and headings take their name from their text,
+      // but alerts and status messages do not, so the text matches either way.
+      return page.getByRole(target.role, { name: text, exact }).or(showsText(page.getByRole(target.role)));
     }
     if (target.text !== undefined) return page.getByText(target.text, { exact });
     throw new Error("Give a role (optionally with a name) or a text to target.");

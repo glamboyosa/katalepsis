@@ -17,7 +17,7 @@ Last updated: 2026-10-10.
 - [docs/reference-review.md](docs/reference-review.md) records Docket and Conclave at their commit SHAs, credential lookup order, providers, redaction and the choices katalepsis makes.
 - [docs/adr/0001-playwright-results-report-schema-and-boundaries.md](docs/adr/0001-playwright-results-report-schema-and-boundaries.md) covers result authority, the report schema, credentials and browser boundaries.
 - pnpm workspace with `packages/core`, `packages/cli` and `apps/demo-form`. Scripts: `format`, `format:check`, `lint`, `typecheck`, `test`, `test:integration`, `check`.
-- M0 itself added no credential, AI or MCP dependency. M2 added the AI SDK, the OpenAI and OpenRouter providers, `playwright-core` and `@napi-rs/keyring`. M3 added `@modelcontextprotocol/sdk` 1.32.1.
+- M0 itself added no credential, AI or MCP dependency. M2 added the AI SDK, the OpenAI and OpenRouter providers, `playwright-core` and `@napi-rs/keyring`. M3 added the MCP TypeScript SDK; the server now uses `@modelcontextprotocol/server` 2.3.1, which implements the 2026-07-28 specification, and the tests use `@modelcontextprotocol/client` 2.3.1 and the version 1 `@modelcontextprotocol/sdk` 1.32.1 as an older client.
 
 ### M1
 
@@ -128,8 +128,8 @@ M2, on macOS with Node 23.9.0, demo form at `http://127.0.0.1:4173`:
 ## Known limitations
 
 - **External-developer gate not done.** The M1 gate needs another developer to install from the README, run their own suite and attach the bundle to a PR without help. That has not happened.
-- **Not published.** katalepsis runs from a clone (`node packages/cli/dist/main.js`).
-- **Base URL wiring is trusted, not verified.** Playwright's JSON report does not include `use.baseURL`, so katalepsis cannot prove the config read `KATALEPSIS_BASE_URL`. The report says so.
+- **Not published to npm.** `install.sh` builds katalepsis from GitHub and puts `katalepsis` and `katalepsis-mcp` launchers in `~/.local/bin`.
+- **Base URL wiring is trusted, not verified.** Playwright's JSON report does not include `use.baseURL`, so katalepsis cannot prove the config read `KATALEPSIS_BASE_URL`. When the config file doesn't mention it at all, `run` prints a warning and the report says the tests most likely ran against the config's own baseURL. Conclave and gc-exp both hardcode their baseURL.
 - **The project's reporters are replaced** by the JSON reporter during a katalepsis run.
 - **Evidence is not redacted.** Screenshots, videos and traces are copied as Playwright wrote them. The report warns about this.
 - **Inline attachments** (`testInfo.attach` with a body instead of a path) are counted but not bundled.
@@ -138,6 +138,7 @@ M2, on macOS with Node 23.9.0, demo form at `http://127.0.0.1:4173`:
 - **Playwright version.** Tested with Playwright 1.63.0 only, because 1.64 needs a browser build not installed on this machine.
 - **No ZIP output.** Attach the run folder by zipping it yourself.
 - **Agent checks prove what the page showed, not that the right thing was asked.** A model can cite a true but irrelevant assertion, for example that an element that never existed is hidden. The report lists every cited assertion next to the pass condition so a reviewer can judge.
+- **Short-lived messages can be missed.** A confirmation that disappears within a second or two, such as Docket's "copied" label, can be gone before the model asserts it, so the check fails even though the page worked. Claude Haiku 5.5 caught Docket's label; GPT-5.4 mini missed it in three runs.
 - **Agent results vary by model and run.** The decision rules are fixed by tests; the actions a model takes are not.
 - **Assertions are visible, hidden and URL-contains only.** Pass conditions about other things, such as a value in a field, end blocked.
 - **Agent checks are not redacted in screenshots or traces**, the same as M1 evidence.

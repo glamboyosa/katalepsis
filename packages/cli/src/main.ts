@@ -9,7 +9,7 @@ import { initCommand } from "./commands/init.ts";
 import { reportOpenCommand } from "./commands/report.ts";
 import { defaultOutDir, runCommand } from "./commands/run.ts";
 import { verifyCommand } from "./commands/verify.ts";
-import { EXIT } from "./exit-codes.ts";
+import { EXIT, UsageError } from "./exit-codes.ts";
 
 const packageJson = createRequire(import.meta.url)("../package.json") as { version: string };
 
@@ -38,7 +38,7 @@ const DEFAULT_CHECK_TIMEOUT_SECONDS = 120;
 
 const parsePositiveInt = (value: string | undefined, fallback: number, flag: string): number => {
   if (value === undefined) return fallback;
-  if (!/^\d+$/.test(value) || Number(value) === 0) throw new Error(`${flag} must be a positive whole number`);
+  if (!/^\d+$/.test(value) || Number(value) === 0) throw new UsageError(`${flag} must be a positive whole number`);
   return Number(value);
 };
 
@@ -90,7 +90,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
 
   if (command === "init") return initCommand(cwd);
   if (command === "run") {
-    if (values.url === undefined) throw new Error("run needs --url <preview-url>");
+    if (values.url === undefined) throw new UsageError("run needs --url <preview-url>");
     return runCommand({
       url: values.url,
       cwd,
@@ -106,7 +106,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   }
   if (command === "verify") {
     if (values.url === undefined || values.checks === undefined) {
-      throw new Error("verify needs --url <preview-url> and --checks <checks.json>");
+      throw new UsageError("verify needs --url <preview-url> and --checks <checks.json>");
     }
     return verifyCommand({
       url: values.url,
@@ -133,7 +133,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
   if (command === "report" && subcommand === "open") {
     return reportOpenCommand(out ?? defaultOutDir(cwd), rest[0] ?? null, values.print ?? false);
   }
-  throw new Error(`Unknown command: ${[command, subcommand].filter(Boolean).join(" ")}`);
+  throw new UsageError(`Unknown command: ${[command, subcommand].filter(Boolean).join(" ")}`);
 };
 
 main(process.argv.slice(2)).then(
@@ -141,7 +141,12 @@ main(process.argv.slice(2)).then(
     process.exitCode = code;
   },
   (error: unknown) => {
-    console.error(`katalepsis: ${error instanceof Error ? error.message : String(error)}\n\n${USAGE}`);
+    const message = error instanceof Error ? error.message : String(error);
+    // node:util parseArgs reports unknown or malformed options with ERR_PARSE_ARGS_* codes.
+    const isUsage =
+      error instanceof UsageError ||
+      (error instanceof Error && "code" in error && String(error.code).startsWith("ERR_PARSE_ARGS"));
+    console.error(isUsage ? `katalepsis: ${message}\n\n${USAGE}` : `katalepsis: ${message}`);
     process.exitCode = EXIT.usage;
   },
 );

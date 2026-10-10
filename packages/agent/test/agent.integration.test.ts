@@ -67,6 +67,15 @@ beforeAll(async () => {
       response.writeHead(200, { "content-type": "text/html" }).end('<h1>About</h1><a href="/">Home</a>');
       return;
     }
+    if (request.url === "/plans") {
+      response
+        .writeHead(200, { "content-type": "text/html" })
+        .end(
+          "<button onclick=\"document.getElementById('plans').hidden = false\">Show plans</button>" +
+            '<ul id="plans" hidden><li>Plan A <span>$5</span></li><li>Plan\n   B&nbsp;yearly</li></ul>',
+        );
+      return;
+    }
     if (request.url === "/go") {
       response.writeHead(302, { location: elsewhere.url }).end();
       return;
@@ -259,6 +268,55 @@ describe("verifyWithAgent on the demo signup form", () => {
     ]);
     expect(result.status).toBe("blocked");
     expect(result.observed).toContain("needs something visible");
+  });
+
+  it("matches a role by the text a model gives instead of a name", async () => {
+    const { result } = await runOne([
+      { tool: "click", input: { role: "button", text: "Sign up" } },
+      { tool: "assert", input: { expectation: "visible", role: "heading", text: "Welcome back" } },
+      { tool: "finish", input: { verdict: "passed", summary: "A heading is shown.", assertionIds: ["a1"] } },
+    ]);
+    expect(result.status).toBe("blocked");
+    expect(result.observed).toContain('a1 FAILED: role "heading" with text "Welcome back" is visible');
+  });
+
+  it("matches an element by text shown inside it, beside other content", async () => {
+    const { result } = await runOne(
+      [
+        { tool: "navigate", input: { target: "/plans" } },
+        { tool: "click", input: { role: "button", text: "Show plans" } },
+        { tool: "assert", input: { expectation: "visible", role: "listitem", text: "Plan A" } },
+        { tool: "assert", input: { expectation: "visible", role: "listitem", text: "Plan B yearly" } },
+        { tool: "finish", input: { verdict: "passed", summary: "Plans shown.", assertionIds: ["a1", "a2"] } },
+      ],
+      { previewUrl: linksUrl },
+    );
+    expect(result.observed).toContain('a1 PASSED: role "listitem" with text "Plan A" is visible');
+    expect(result.observed).toContain('a2 PASSED: role "listitem" with text "Plan B yearly" is visible');
+    expect(result.status).toBe("passed");
+  });
+
+  it("matches a status message by its text, although status roles take no name from their content", async () => {
+    const signUp = [
+      { tool: "fill", input: { label: "Name", value: "Test Person" } },
+      { tool: "fill", input: { label: "Email", value: "test.person@example.com" } },
+      { tool: "click", input: { role: "button", text: "Sign up" } },
+    ];
+    const shown = await runOne([
+      ...signUp,
+      { tool: "assert", input: { expectation: "visible", role: "status", text: "Thanks, you're signed up." } },
+      { tool: "finish", input: { verdict: "passed", summary: "Confirmation shown.", assertionIds: ["a1"] } },
+    ]);
+    expect(shown.result.status).toBe("passed");
+
+    const hidden = await runOne([
+      ...signUp,
+      { tool: "assert", input: { expectation: "hidden", role: "status", text: "Thanks, you're signed up." } },
+      { tool: "finish", input: { verdict: "failed", summary: "Claims it is hidden.", assertionIds: ["a1"] } },
+    ]);
+    expect(hidden.result.observed).toContain(
+      'a1 FAILED: role "status" with text "Thanks, you\'re signed up." is hidden',
+    );
   });
 
   it("blocks a pass that cites a heading that was there before the agent acted", async () => {

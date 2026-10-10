@@ -1,6 +1,13 @@
 import path from "node:path";
 import { Effect, Layer } from "effect";
-import { PlaywrightRunnerLive, PreviewProbeLive, RunMetadataLive, verifyWithPlaywright } from "@katalepsis/core";
+import {
+  configMentionsBaseUrl,
+  findPlaywrightConfig,
+  PlaywrightRunnerLive,
+  PreviewProbeLive,
+  RunMetadataLive,
+  verifyWithPlaywright,
+} from "@katalepsis/core";
 import { EXIT, exitCodeFor } from "../exit-codes.ts";
 import { cancelOnSignal } from "./cancel.ts";
 
@@ -23,7 +30,13 @@ const LiveLayer = Layer.mergeAll(PlaywrightRunnerLive, PreviewProbeLive, RunMeta
 export const defaultOutDir = (cwd: string): string => path.join(cwd, "artifacts", "katalepsis");
 
 /** Runs verification, prints a short summary and returns the process exit code. */
-export const runCommand = (args: RunArgs): Promise<number> => {
+export const runCommand = async (args: RunArgs): Promise<number> => {
+  const configFile = findPlaywrightConfig(args.cwd, args.config);
+  if (configFile !== null && (await configMentionsBaseUrl(configFile)) === false) {
+    console.error(
+      `katalepsis: warning: ${path.basename(configFile)} does not read KATALEPSIS_BASE_URL, so the tests will probably run against the baseURL in that config, not the preview URL. \`katalepsis init\` prints the setting to add.`,
+    );
+  }
   const cancellation = cancelOnSignal();
   return verifyWithPlaywright({
     previewUrl: args.url,

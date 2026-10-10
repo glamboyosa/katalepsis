@@ -3,6 +3,7 @@ export * from "./status.ts";
 export * from "./sanitize.ts";
 export * from "./errors.ts";
 export * from "./playwright-report.ts";
+export * from "./playwright-config.ts";
 export * from "./playwright-runner.ts";
 export * from "./preview-probe.ts";
 export * from "./run-metadata.ts";

@@ -316,7 +316,9 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
         const secrets = [...previewUrlSecrets(preview), ...setup.secrets];
         const project = `${setup.info.provider}/${setup.info.id}`;
 
-        const browser = yield* Effect.result(openBrowser(options.launchBrowser ?? (() => launchAgentBrowser())));
+        const browser = yield* Effect.result(
+          openBrowser(options.launchBrowser ?? (() => launchAgentBrowser(process.env, options.signal))),
+        );
         if (browser._tag === "Failure") {
           const message = `The browser could not start: ${redact(browser.failure, secrets)}`;
           return {

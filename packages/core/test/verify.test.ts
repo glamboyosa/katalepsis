@@ -53,6 +53,8 @@ type FakeRunner = {
   run?: () => Effect.Effect<PlaywrightJsonReport, PlaywrightProcessError>;
   list?: (selection: PlaywrightSelection) => Effect.Effect<PlaywrightJsonReport, ReporterOutputError>;
   install?: () => Effect.Effect<string, PlaywrightProcessError>;
+  /** Makes the run look cancelled or timed out after Playwright wrote a partial report. */
+  stoppedBy?: PlaywrightProcessError;
 };
 
 const layers = (fake: FakeRunner, probe: ProbeResult = { reachable: true }) => {
@@ -73,7 +75,12 @@ const layers = (fake: FakeRunner, probe: ProbeResult = { reachable: true }) => {
         calls.run += 1;
         calls.baseUrls.push(runOptions.baseUrl);
         return (fake.run?.() ?? Effect.succeed(report([]))).pipe(
-          Effect.map((output) => ({ report: output, exitCode: 1, output: `GET ${runOptions.baseUrl}` })),
+          Effect.map((output) => ({
+            report: output,
+            exitCode: 1,
+            output: `GET ${runOptions.baseUrl}`,
+            stoppedBy: fake.stoppedBy ?? null,
+          })),
         );
       },
     }),
@@ -333,6 +340,62 @@ describe("verifyWithPlaywright", () => {
     ]);
   });
 
+  it("says when the Playwright config never mentions KATALEPSIS_BASE_URL", async () => {
+    const project = await mkdtemp(path.join(tmpdir(), "katalepsis-config-"));
+    const limitation = async (config: string) => {
+      await writeFile(path.join(project, "playwright.config.ts"), config);
+      const { layer } = layers({ run: () => Effect.succeed(report([{ title: "signs up", tests: [test()] }])) });
+      const outcome = await Effect.runPromise(
+        verifyWithPlaywright(options({ cwd: project })).pipe(Effect.provide(layer)),
+      );
+      return outcome.run.coverageLimitations[0];
+    };
+    try {
+      expect(await limitation('export default { use: { baseURL: "http://localhost:3000" } };')).toContain(
+        "playwright.config.ts does not mention KATALEPSIS_BASE_URL, so the tests may have run against a baseURL set in that config",
+      );
+      expect(await limitation("export default { use: { baseURL: process.env.KATALEPSIS_BASE_URL } };")).toBe(
+        "katalepsis passes the preview URL to Playwright as KATALEPSIS_BASE_URL. It cannot confirm that the Playwright config reads it.",
+      );
+    } finally {
+      await rm(project, { recursive: true, force: true });
+    }
+  });
+
+  it("keeps finished tests when Playwright stops part way and lists the rest as not finished", async () => {
+    const { layer } = layers({
+      run: () =>
+        Effect.succeed(
+          report([
+            { title: "signs up", tests: [test()] },
+            {
+              title: "rejects a bad email",
+              tests: [test({ status: "skipped", results: [result({ status: "interrupted" })] })],
+            },
+          ]),
+        ),
+      stoppedBy: new PlaywrightProcessError({
+        message: "Playwright did not finish within 60s",
+        retryable: true,
+        output: "",
+      }),
+    });
+
+    const outcome = await Effect.runPromise(verifyWithPlaywright(options()).pipe(Effect.provide(layer)));
+
+    expect(outcome.run.status).toBe("blocked");
+    expect(outcome.run.checks.map((check) => [check.title, check.status])).toEqual([["signs up", "passed"]]);
+    expect(outcome.run.notTested).toEqual([
+      expect.objectContaining({
+        title: "rejects a bad email",
+        reason: "Not finished: the run stopped before this test completed",
+      }),
+    ]);
+    expect(outcome.run.errors.map((error) => error.message)).toEqual([
+      expect.stringContaining("Playwright did not finish within 60s"),
+    ]);
+  });
+
   it("writes a blocked report and removes scratch files when the run is cancelled", async () => {
     const controller = new AbortController();
     const { layer } = layers({
@@ -400,7 +463,7 @@ describe("verifyWithPlaywright", () => {
         locate: () => Effect.succeed({ cliPath: "/fake/cli.js", version: "1.63.0" }),
         installBrowsers: () => Effect.succeed("installed"),
         list: () => failingList,
-        run: () => Effect.succeed({ report: report([]), exitCode: 1, output: "" }),
+        run: () => Effect.succeed({ report: report([]), exitCode: 1, output: "", stoppedBy: null }),
       }),
     );
 

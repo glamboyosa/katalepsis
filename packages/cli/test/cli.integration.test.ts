@@ -22,9 +22,12 @@ const freePort = (): Promise<number> =>
     });
   });
 
-const runCli = (args: ReadonlyArray<string>): Promise<{ code: number; stdout: string; stderr: string }> =>
+const runCli = (
+  args: ReadonlyArray<string>,
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<{ code: number; stdout: string; stderr: string }> =>
   new Promise((resolve) => {
-    execFile(process.execPath, [cli, ...args], { timeout: 110_000 }, (error, stdout, stderr) => {
+    execFile(process.execPath, [cli, ...args], { timeout: 110_000, env }, (error, stdout, stderr) => {
       resolve({ code: typeof error?.code === "number" ? error.code : 0, stdout, stderr });
     });
   });
@@ -209,8 +212,61 @@ describe("katalepsis run against the demo signup form", () => {
     const bundle = bundleFrom(stdout);
     const manifest = JSON.parse(await readFile(path.join(bundle, "manifest.json"), "utf8"));
     expect(manifest.errors[0].message).toContain("did not finish within 1s");
-    expect(await readdir(path.join(bundle, "evidence", "run"))).toEqual(["playwright.log"]);
+    expect(await readdir(path.join(bundle, "evidence", "run"))).toContain("playwright.log");
     expect(await leftoverBrowsers(baseline)).toEqual([]);
+  });
+});
+
+describe("katalepsis settings and errors", () => {
+  let home: string;
+  let env: NodeJS.ProcessEnv;
+  beforeAll(async () => {
+    home = await mkdtemp(path.join(tmpdir(), "katalepsis-home-"));
+    const { OPENAI_API_KEY: _openai, OPENROUTER_API_KEY: _openrouter, ...rest } = process.env;
+    env = { ...rest, KATALEPSIS_HOME: home };
+  });
+  afterAll(async () => {
+    await rm(home, { recursive: true, force: true });
+  });
+
+  it("drops a saved model when the provider changes, since model IDs differ between providers", async () => {
+    await runCli(["config", "provider", "openrouter"], env);
+    await writeFile(
+      path.join(home, "config.json"),
+      JSON.stringify({ provider: "openrouter", model: "anthropic/claude-haiku-5.5" }),
+    );
+    expect((await runCli(["config", "provider", "openrouter"], env)).stdout).not.toContain("Cleared");
+
+    const switched = await runCli(["config", "provider", "openai"], env);
+    expect(switched.stdout).toContain("Cleared the openrouter model anthropic/claude-haiku-5.5");
+    expect(JSON.parse(await readFile(path.join(home, "config.json"), "utf8"))).toEqual({ provider: "openai" });
+  });
+
+  it("warns when the Playwright config does not read KATALEPSIS_BASE_URL", async () => {
+    await writeFile(
+      path.join(home, "playwright.config.ts"),
+      'export default { use: { baseURL: "http://localhost:3000" } };',
+    );
+    const { stderr } = await runCli(["run", "--url", "http://127.0.0.1:1/", "--cwd", home], env);
+    expect(stderr).toContain("playwright.config.ts does not read KATALEPSIS_BASE_URL");
+
+    const demoRun = await runCli(["run", "--url", "http://127.0.0.1:1/", "--cwd", demo, "--out", outDir], env);
+    expect(demoRun.stderr).not.toContain("does not read KATALEPSIS_BASE_URL");
+  });
+
+  it("prints usage for a command-line mistake but not for other errors", async () => {
+    const unknown = await runCli(["bogus"], env);
+    expect(unknown.code).toBe(3);
+    expect(unknown.stderr).toContain("Unknown command: bogus");
+    expect(unknown.stderr).toContain("Usage:");
+
+    const badOption = await runCli(["run", "--nope"], env);
+    expect(badOption.stderr).toContain("Usage:");
+
+    const missingConfig = await runCli(["run", "--url", "http://127.0.0.1:1/", "--config", "nope.ts"], env);
+    expect(missingConfig.code).toBe(3);
+    expect(missingConfig.stderr).toContain("--config file not found");
+    expect(missingConfig.stderr).not.toContain("Usage:");
   });
 });
 

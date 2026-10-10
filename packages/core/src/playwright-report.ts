@@ -83,6 +83,11 @@ export type NormalizeContext = {
   readonly secrets: ReadonlyArray<string>;
   /** Network errors count as an unreachable preview only when they name this origin. */
   readonly previewOrigin: string;
+  /**
+   * Set when the run was cancelled or timed out and Playwright wrote a partial report.
+   * Tests it never started, or stopped part way, are then listed as not tested for this reason.
+   */
+  readonly stoppedReason?: string;
 };
 
 export type NormalizedReport = {
@@ -248,7 +253,11 @@ export const normalizePlaywrightReport = (
         title: entry.titlePath.join(" › "),
         file: entry.spec.file,
         project: entry.test.projectName,
-        reason: skipReasonOf(entry.test) ?? "Skipped by Playwright",
+        reason:
+          skipReasonOf(entry.test) ??
+          (context.stoppedReason !== undefined && (entry.test.results.at(-1)?.status ?? "interrupted") === "interrupted"
+            ? context.stoppedReason
+            : "Skipped by Playwright"),
       });
       continue;
     }

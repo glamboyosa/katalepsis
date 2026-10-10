@@ -4,6 +4,7 @@ import { Effect, Schema } from "effect";
 import { ConfigurationError, PlaywrightProcessError, ReporterOutputError, ReportWriteError } from "./errors.ts";
 import { copyEvidence, writeRunLog } from "./evidence.ts";
 import { declaredTests, normalizePlaywrightReport, type DeclaredTest } from "./playwright-report.ts";
+import { configMentionsBaseUrl, findPlaywrightConfig } from "./playwright-config.ts";
 import { PlaywrightRunner, type PlaywrightSelection } from "./playwright-runner.ts";
 import { PreviewProbe } from "./preview-probe.ts";
 import { newRunId, writeBundle } from "./bundle.ts";
@@ -165,7 +166,12 @@ const executeTests = (
       } satisfies Execution;
     }
 
-    const normalized = normalizePlaywrightReport(result.success.report, { secrets, previewOrigin: preview.origin });
+    const { stoppedBy } = result.success;
+    const normalized = normalizePlaywrightReport(result.success.report, {
+      secrets,
+      previewOrigin: preview.origin,
+      ...(stoppedBy === null ? {} : { stoppedReason: "Not finished: the run stopped before this test completed" }),
+    });
     const copied = yield* copyEvidence(bundleDir, normalized.attachments, finishedAt);
     const limitations = [
       ...evidenceLimitations(normalized.checks, copied.files),
@@ -185,7 +191,10 @@ const executeTests = (
     return {
       checks: normalized.checks,
       notTested: normalized.notTested,
-      errors: normalized.errors,
+      errors: [
+        ...normalized.errors,
+        ...(stoppedBy === null ? [] : [processError(stoppedBy, "playwright-run", secrets)]),
+      ],
       evidence: [...copied.files, log],
       limitations,
       accountedIds: new Set(normalized.checks.map((check) => check.id)),
@@ -318,6 +327,8 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
     });
     const secrets = previewUrlSecrets(preview);
     const install = yield* runner.locate(options.cwd);
+    const configFile = findPlaywrightConfig(options.cwd, options.config);
+    const mentionsBaseUrl = yield* Effect.promise(() => configMentionsBaseUrl(configFile));
     const startedAt = yield* metadata.now;
     const runId = newRunId(startedAt);
     const bundleDir = path.resolve(options.outDir, runId);
@@ -415,7 +426,9 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
           checks,
           notTested,
           coverageLimitations: [
-            "katalepsis passes the preview URL to Playwright as KATALEPSIS_BASE_URL. It cannot confirm that the Playwright config reads it.",
+            mentionsBaseUrl === false && configFile !== null
+              ? `${path.basename(configFile)} does not mention KATALEPSIS_BASE_URL, so the tests may have run against a baseURL set in that config rather than ${preview.display}.`
+              : "katalepsis passes the preview URL to Playwright as KATALEPSIS_BASE_URL. It cannot confirm that the Playwright config reads it.",
             commitSha === null
               ? "Commit is unknown: the project directory is not a git checkout with a commit."
               : "Commit is the HEAD of the local checkout. katalepsis does not confirm that the preview was built from it.",

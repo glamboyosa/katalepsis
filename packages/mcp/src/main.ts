@@ -3,7 +3,7 @@ import { realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { parseArgs } from "node:util";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { forceStopPlaywright } from "@katalepsis/core";
 import { createServer } from "./server.ts";
 
@@ -13,7 +13,7 @@ const { values } = parseArgs({ options: { root: { type: "string" } } });
 // stdout carries the MCP protocol, so anything for humans goes to stderr.
 // Claude Code sets CLAUDE_PROJECT_DIR for the servers it starts, so .mcp.json needs no --root.
 const root = realpathSync(path.resolve(values.root ?? process.env["CLAUDE_PROJECT_DIR"] ?? process.cwd()));
-const { server, idle } = createServer({ root, version, env: process.env });
+const { factory, idle } = createServer({ root, version, env: process.env });
 
 let shuttingDown = false;
 let signals = 0;
@@ -26,7 +26,7 @@ const shutdown = async (): Promise<void> => {
   if (shuttingDown) return;
   shuttingDown = true;
   forceStopPlaywright();
-  await server.close();
+  await connection.close();
   await idle();
   process.exit(0);
 };
@@ -44,5 +44,9 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) process.on(signal
 process.stdin.on("end", () => void shutdown());
 process.stdin.on("close", () => void shutdown());
 
-await server.connect(new StdioServerTransport());
+// serveStdio answers clients on the 2026-07-28 revision and older ones that still send initialize.
+const connection = serveStdio(factory, {
+  legacy: "serve",
+  onerror: (error) => console.error(`katalepsis MCP: ${error.message}`),
+});
 console.error(`katalepsis MCP server ${version} ready. Workspace root: ${root}`);

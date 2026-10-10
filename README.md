@@ -14,15 +14,13 @@ That is a real run against the signup form in `apps/demo-form`, which has a deli
 
 ## Install
 
-Needs Node 22.12 or newer and pnpm 10. katalepsis is not on npm yet, so build it from the repository:
+Needs Node 22.12 or newer, git, and pnpm 10 (or corepack, which comes with Node). katalepsis is not on npm yet, so the installer builds it from this repository:
 
 ```bash
-git clone https://github.com/glamboyosa/katalepsis.git
-cd katalepsis
-pnpm install
-pnpm build
-alias katalepsis="node $PWD/packages/cli/dist/main.js"
+curl -fsSL https://raw.githubusercontent.com/glamboyosa/katalepsis/main/install.sh | sh
 ```
+
+It clones the repository into `~/.local/share/katalepsis`, runs `pnpm install` and `pnpm build` there, and writes two small launchers, `katalepsis` and `katalepsis-mcp`, into `~/.local/bin`. Set `KATALEPSIS_SOURCE_DIR` or `KATALEPSIS_INSTALL_DIR` to change those folders, and `KATALEPSIS_REF` to build a branch or tag other than `main`. Running the installer again updates the clone and rebuilds.
 
 To run your own tests, the project you check needs `@playwright/test`, which any project with Playwright tests already has. You don't need to install browsers by hand: `katalepsis run --install-browsers` runs the project's own `playwright install` first, so the browsers always match its Playwright version, and agent checks download their own Chromium the first time they run.
 
@@ -34,7 +32,7 @@ What katalepsis touches on your machine:
 - Browsers go into Playwright's shared cache (`~/Library/Caches/ms-playwright` on macOS, `~/.cache/ms-playwright` on Linux), not your project. The agent's Chromium takes about 200 MB, and `--install-browsers` downloads whatever your Playwright version installs by default, about 1 GB for Chromium, Firefox and WebKit. Set `KATALEPSIS_NO_BROWSER_DOWNLOAD=1` to stop the automatic download.
 - katalepsis itself only calls your preview URL, Playwright's browser download servers when it installs a browser, and, for agent checks, OpenAI or OpenRouter with your key. Your own Playwright tests make whatever requests they already make.
 
-To uninstall, run `katalepsis auth forget` for each provider you saved, delete the config folder and delete the clone.
+To uninstall, run `katalepsis auth forget` for each provider you saved, then delete the config folder, `~/.local/share/katalepsis`, and the two launchers in `~/.local/bin`.
 
 ## Ways to use it
 
@@ -128,10 +126,10 @@ Each check is limited by `--max-steps` (15), `--max-tokens` (200,000) and `--che
 `packages/mcp` is a local MCP server with three tools: run the tests, run agent checks, and read a report. It never takes a key as an argument and only works inside the folder you give it. For Codex:
 
 ```bash
-codex mcp add katalepsis -- node /path/to/katalepsis/packages/mcp/dist/main.js --root /path/to/your-app
+codex mcp add katalepsis -- katalepsis-mcp --root /path/to/your-app
 ```
 
-Set `tool_timeout_sec = 600` for it in `~/.codex/config.toml`, since Codex's default is 60 seconds. Claude Code and Cursor setup is in [docs/mcp.md](docs/mcp.md).
+In `~/.codex/config.toml`, set `tool_timeout_sec = 600` for it, since Codex's default is 60 seconds, and `default_tools_approval_mode = "approve"` if you use `codex exec`, which can't ask before a tool call. Claude Code and Cursor setup is in [docs/mcp.md](docs/mcp.md).
 
 <details>
 <summary>How results are decided</summary>

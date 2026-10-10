@@ -24,12 +24,15 @@ const fence = (text: string): string => {
 };
 
 /** Renders a concise Markdown summary for a PR description or comment. */
+const notRunSentence = (count: number): string =>
+  count === 0 ? "" : ` ${count} declared ${count === 1 ? "test was" : "tests were"} not run.`;
+
 export const renderMarkdown = (run: VerificationRun): string => {
   const counts = countByStatus(run);
   const lines: Array<string> = [
     `# katalepsis report: ${STATUS_LABEL[run.status]}`,
     "",
-    `**${counts.passed} passed, ${counts.failed} failed, ${counts.blocked} blocked** out of ${run.checks.length} checks run. ${run.notTested.length} declared tests were not run.`,
+    `**${counts.passed} passed, ${counts.failed} failed, ${counts.blocked} blocked** out of ${run.checks.length} ${run.checks.length === 1 ? "check" : "checks"} run.${notRunSentence(run.notTested.length)}`,
     "",
     `- Preview: ${md(run.previewUrl)}`,
     `- Commit: ${run.commitSha === null ? "unknown" : `\`${run.commitSha}\``}`,

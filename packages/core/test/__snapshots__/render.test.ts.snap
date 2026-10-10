@@ -81,7 +81,7 @@ Received: &quot;&lt;img src=x onerror=alert(1)&gt;&quot;</pre><div class="eviden
 exports[`renderMarkdown > is deterministic 1`] = `
 "# katalepsis report: Failed
 
-**1 passed, 1 failed, 0 blocked** out of 2 checks run. 1 declared tests were not run.
+**1 passed, 1 failed, 0 blocked** out of 2 checks run. 1 declared test was not run.
 
 - Preview: https://preview.example.com/?token=REDACTED
 - Commit: unknown

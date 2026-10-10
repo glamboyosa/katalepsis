@@ -96,6 +96,11 @@ export const listModels = async (
     headers: key === null ? {} : { authorization: `Bearer ${Redacted.value(key)}` },
     signal: AbortSignal.timeout(CATALOG_TIMEOUT_MS),
   });
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      `${provider} rejected the key (HTTP ${response.status}). Check it with \`katalepsis auth status\`.`,
+    );
+  }
   if (!response.ok) throw new Error(`The ${provider} model catalog answered HTTP ${response.status}.`);
   const body: unknown = await response.json();
   if (!isModelList(body)) throw new Error(`The ${provider} model catalog had an unexpected shape.`);

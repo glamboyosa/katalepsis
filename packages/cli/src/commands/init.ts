@@ -2,10 +2,9 @@ import { existsSync } from "node:fs";
 import { appendFile, readFile } from "node:fs/promises";
 import path from "node:path";
 import { Effect } from "effect";
-import { PlaywrightRunner, PlaywrightRunnerLive } from "@katalepsis/core";
+import { CONFIG_NAMES, PlaywrightRunner, PlaywrightRunnerLive } from "@katalepsis/core";
 import { EXIT } from "../exit-codes.ts";
 
-const CONFIG_NAMES = ["ts", "js", "mts", "mjs", "cts", "cjs"].map((extension) => `playwright.config.${extension}`);
 const IGNORE_ENTRY = "artifacts/katalepsis/";
 
 const CONFIG_SNIPPET = `use: {

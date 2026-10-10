@@ -10,4 +10,7 @@ export const EXIT = {
   reportWrite: 4,
 } as const;
 
+/** A mistake in the command line itself. The CLI prints the usage text after it. */
+export class UsageError extends Error {}
+
 export const exitCodeFor = (status: CheckStatus): number => EXIT[status];
