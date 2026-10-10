@@ -8,6 +8,10 @@ pnpm --filter site serve
 
 Then open http://127.0.0.1:4321.
 
+## Deploying
+
+The site is meant for https://katalepsis.glamboyosa.xyz. On Vercel, set the project's root directory to `apps/site`. `vercel.json` serves `public/` as is and redirects `/install.sh` to the installer on GitHub, so `curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh` works once the domain points at the deployment.
+
 ## Product video
 
 `public/katalepsis-demo.mp4` is rendered, not screen-recorded. `video/stage.html` draws each scene as a function of time from real material in `video/assets/`: CLI output captured from actual runs on the demo form (with absolute paths shortened to project-relative ones) and screenshots of the real reports. To render it again on macOS, with the site server running:
