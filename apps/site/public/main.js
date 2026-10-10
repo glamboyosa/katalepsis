@@ -16,6 +16,29 @@ for (const button of document.querySelectorAll("[data-copy]")) {
   });
 }
 
+// Hovering or tapping a status chip runs its check again: back to RUNNING, then the result.
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+for (const chip of document.querySelectorAll(".chip")) {
+  const rerun = () => {
+    if (reducedMotion.matches || chip.dataset.running === "true") return;
+    chip.dataset.running = "true";
+    chip.style.setProperty("--resolve", "650ms");
+    for (const label of chip.querySelectorAll(".state b")) {
+      // Clearing and restoring the animation restarts it from the first frame.
+      label.style.animation = "none";
+      void label.offsetWidth;
+      label.style.animation = "";
+    }
+    window.setTimeout(() => {
+      delete chip.dataset.running;
+    }, 1000);
+  };
+  chip.addEventListener("pointerenter", (event) => {
+    if (event.pointerType === "mouse") rerun();
+  });
+  chip.addEventListener("click", rerun);
+}
+
 // Video playback speed toggle.
 const video = document.querySelector("[data-video]");
 const speed = document.querySelector("[data-speed]");

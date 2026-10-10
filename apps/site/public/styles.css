@@ -239,6 +239,10 @@ h1 {
   font: 0.72rem/1.2 var(--font-mono);
   white-space: nowrap;
   backdrop-filter: blur(6px);
+  /* Hovering or tapping a chip runs its check again (main.js). */
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
   /* backwards, not both, so the hover transform below applies once the entrance ends. */
   animation:
     chip-in 700ms var(--ease-out) backwards,
@@ -630,9 +634,40 @@ h2 {
 }
 
 /* Below this width the anchored chips would run off the edge, so they are hidden. */
+/*
+ * Below this width the floating chips would run off the edge or into the buttons, so they
+ * become a row above the headline instead, with the same run and replay.
+ */
 @media (max-width: 1280px) {
   .chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: -48px auto 40px;
+    max-width: 760px;
+  }
+  .chip {
+    position: static;
+    animation: chip-in 700ms var(--ease-out) backwards;
+  }
+  .chip:active {
+    transform: scale(0.97);
+  }
+}
+@media (max-width: 640px) {
+  .chips {
+    margin: -40px auto 28px;
+    gap: 6px;
+  }
+  .chip {
+    padding: 7px 10px;
+  }
+  .chip .detail {
     display: none;
+  }
+  .chip .state {
+    margin-right: 0;
   }
 }
 @media (max-width: 1000px) {
