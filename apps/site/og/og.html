@@ -1,0 +1,242 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400..700&family=Geist+Mono:wght@400..600&display=block"
+    />
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        background: #09090b;
+        color: #fafafa;
+        font-family: Geist, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        overflow: hidden;
+        position: relative;
+      }
+      .grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(#ffffff08 1px, transparent 1px), linear-gradient(90deg, #ffffff08 1px, transparent 1px);
+        background-size: 48px 48px;
+        mask-image: radial-gradient(ellipse at 30% 40%, #000 30%, transparent 75%);
+      }
+      .wrap {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 470px;
+        gap: 48px;
+        padding: 64px 72px;
+        height: 100%;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+      .mark {
+        width: 56px;
+        height: 56px;
+        overflow: hidden;
+        image-rendering: pixelated;
+      }
+      .mark img {
+        width: 224px;
+        height: 56px;
+        transform: translateX(-75%);
+        image-rendering: pixelated;
+      }
+      h1 {
+        font-size: 76px;
+        line-height: 1;
+        letter-spacing: -0.045em;
+        font-weight: 650;
+        margin-top: 56px;
+      }
+      p {
+        margin-top: 24px;
+        font-size: 24px;
+        line-height: 1.4;
+        color: #a1a1aa;
+        max-width: 520px;
+      }
+      .url {
+        position: absolute;
+        left: 72px;
+        bottom: 60px;
+        font:
+          500 22px "Geist Mono",
+          monospace;
+        color: #4fd1a5;
+      }
+      .card {
+        align-self: center;
+        background: #0f0f11;
+        border: 1px solid #27272a;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 30px 80px #0008;
+      }
+      .head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 22px;
+        border-bottom: 1px solid #27272a;
+        font:
+          500 15px "Geist Mono",
+          monospace;
+        color: #71717a;
+      }
+      .pill {
+        font: 500 14px Geist;
+        color: #f87171;
+        background: #f8717119;
+        border-radius: 99px;
+        padding: 4px 12px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 22px 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 18px 22px;
+        border-top: 1px solid #1d1d20;
+      }
+      .row:first-of-type {
+        border-top: 0;
+      }
+      .row b {
+        font:
+          600 13px "Geist Mono",
+          monospace;
+        letter-spacing: 0.04em;
+        display: block;
+        margin-bottom: 3px;
+      }
+      .row span {
+        font-size: 16px;
+        color: #d4d4d8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+      }
+      svg {
+        width: 22px;
+        height: 22px;
+      }
+      .p {
+        color: #22c55e;
+      }
+      .f {
+        color: #f87171;
+      }
+      .k {
+        color: #fbbf24;
+      }
+      .s {
+        color: #71717a;
+      }
+      .bar {
+        display: flex;
+        gap: 4px;
+        height: 6px;
+        margin: 4px 22px 22px;
+      }
+      .bar i {
+        border-radius: 9px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="grid"></div>
+    <div class="wrap">
+      <div>
+        <div class="brand">
+          <span class="mark"><img src="../public/katalepsis-sprite.svg" /></span>katalepsis
+        </div>
+        <h1>Receipts for<br />every preview.</h1>
+        <p>
+          Run your Playwright tests, or plain-English checks, against a preview and attach the report to the pull
+          request.
+        </p>
+      </div>
+      <div class="card">
+        <div class="head"><span>report.html</span><span class="pill">● Failed</span></div>
+        <div class="row">
+          <svg
+            class="f"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          >
+            <circle cx="10" cy="10" r="8" />
+            <path d="m7.4 7.4 5.2 5.2m0-5.2-5.2 5.2" />
+          </svg>
+          <div><b class="f">FAILED</b><span>empty submission shows a required-field error</span></div>
+        </div>
+        <div class="row">
+          <svg
+            class="p"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="10" cy="10" r="8" />
+            <path d="m6.5 10.2 2.3 2.3 4.7-4.9" />
+          </svg>
+          <div><b class="p">PASSED</b><span>valid submission shows a confirmation</span></div>
+        </div>
+        <div class="row">
+          <svg
+            class="k"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+          >
+            <circle cx="10" cy="10" r="8" />
+            <path d="M10 6.2v4.6m0 2.9v.1" />
+          </svg>
+          <div><b class="k">BLOCKED</b><span>connect ECONNREFUSED 127.0.0.1:4999</span></div>
+        </div>
+        <div class="row">
+          <svg
+            class="s"
+            viewBox="0 0 20 20"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-dasharray="3 3"
+          >
+            <circle cx="10" cy="10" r="8" />
+          </svg>
+          <div><b class="s">NOT TESTED</b><span>excluded by --grep</span></div>
+        </div>
+        <div class="bar">
+          <i style="flex: 2; background: #22c55e"></i><i style="flex: 1; background: #f87171"></i
+          ><i style="flex: 1; background: #fbbf24"></i><i style="flex: 1; background: #3f3f46"></i>
+        </div>
+      </div>
+    </div>
+    <div class="url">katalepsis.glamboyosa.xyz</div>
+  </body>
+</html>

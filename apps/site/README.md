@@ -22,3 +22,11 @@ swift video/encode.swift /tmp/katalepsis-frames public/katalepsis-demo.mp4 30
 ```
 
 The encoder uses AVFoundation, which ships with macOS, so no ffmpeg is needed.
+
+## Link previews
+
+`public/og.png` is the 1200x630 image X, LinkedIn, Slack and iMessage show for links to the site. It is rendered from `og/og.html`:
+
+```bash
+node og/render.mjs
+```
