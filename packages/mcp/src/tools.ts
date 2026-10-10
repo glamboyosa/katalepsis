@@ -12,6 +12,7 @@ export const RunTestsInput = Schema.Struct({
   project: Schema.optionalKey(Schema.Array(Schema.String)),
   grep: Schema.optionalKey(Schema.String),
   timeoutSeconds: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 3600 }))),
+  installBrowsers: Schema.optionalKey(Schema.Boolean),
 });
 export type RunTestsInput = typeof RunTestsInput.Type;
 
@@ -54,7 +55,7 @@ export const TOOLS = [
     name: "verification_run_tests",
     title: "Run Playwright tests against a preview",
     description:
-      "Runs the project's existing Playwright tests against a preview URL and writes a katalepsis report. Returns passed, failed, blocked and not-tested counts, each check's result and the report paths. Needs no AI key. Can take minutes.",
+      "Runs the project's existing Playwright tests against a preview URL and writes a katalepsis report. Returns passed, failed, blocked and not-tested counts, each check's result and the report paths. Needs no AI key. Can take minutes. Set installBrowsers to run the project's own playwright install first, for example after a result says a browser could not start.",
     inputSchema: jsonSchema(RunTestsInput),
   },
   {

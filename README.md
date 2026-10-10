@@ -24,16 +24,28 @@ pnpm build
 alias katalepsis="node $PWD/packages/cli/dist/main.js"
 ```
 
-The project you check needs `@playwright/test` and its browsers installed (`npx playwright install`). Agent checks drive their own Chromium through `playwright-core` 1.63; install it once with `pnpm --filter @katalepsis/agent exec playwright-core install chromium-headless-shell`.
+To run your own tests, the project you check needs `@playwright/test`, which any project with Playwright tests already has. You don't need to install browsers by hand: `katalepsis run --install-browsers` runs the project's own `playwright install` first, so the browsers always match its Playwright version, and agent checks download their own Chromium the first time they run.
 
 What katalepsis touches on your machine:
 
 - Reports go to `artifacts/katalepsis/<run-id>/` inside the project you check. `katalepsis init` adds `artifacts/katalepsis/` to that project's `.gitignore`.
 - `katalepsis auth set` stores a key in the OS keychain under the service name `katalepsis`. `katalepsis auth forget <provider>` removes it.
 - `katalepsis config` writes the chosen provider and model, never a key, to `~/.config/katalepsis/config.json` (or `$XDG_CONFIG_HOME/katalepsis`, or `$KATALEPSIS_HOME`).
-- katalepsis itself only calls your preview URL and, for agent checks, OpenAI or OpenRouter with your key. Your own Playwright tests make whatever requests they already make.
+- Browsers go into Playwright's shared cache (`~/Library/Caches/ms-playwright` on macOS, `~/.cache/ms-playwright` on Linux), not your project. The agent's Chromium takes about 200 MB, and `--install-browsers` downloads whatever your Playwright version installs by default, about 1 GB for Chromium, Firefox and WebKit. Set `KATALEPSIS_NO_BROWSER_DOWNLOAD=1` to stop the automatic download.
+- katalepsis itself only calls your preview URL, Playwright's browser download servers when it installs a browser, and, for agent checks, OpenAI or OpenRouter with your key. Your own Playwright tests make whatever requests they already make.
 
 To uninstall, run `katalepsis auth forget` for each provider you saved, delete the config folder and delete the clone.
+
+## Ways to use it
+
+| You want to                                          | Use                                                                        | You need                                                                                                                |
+| ---------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Run your existing Playwright tests against a preview | `katalepsis run`                                                           | A project with Playwright tests. No AI key.                                                                             |
+| Check behaviour nobody has written a test for        | `katalepsis verify`                                                        | An OpenAI or OpenRouter key                                                                                             |
+| Let Claude Code, Codex or Cursor run either of those | The MCP server in `packages/mcp`                                           | The client set up as in [docs/mcp.md](docs/mcp.md)                                                                      |
+| Run it in CI                                         | `katalepsis run` or `verify` in a job, then upload `artifacts/katalepsis/` | Node and pnpm in the job, keys as secrets for `verify`. Not tested in CI yet, and there is no ready-made GitHub Action. |
+
+Every one of these writes the same report folder.
 
 ## Run your Playwright tests against a preview
 
@@ -56,7 +68,7 @@ katalepsis run --cwd path/to/your-app --url https://your-preview.example.com
 katalepsis report open --cwd path/to/your-app
 ```
 
-`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout` and `--out`. No AI key is involved.
+`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout`, `--out` and `--install-browsers`. If a browser can't start, the run is blocked and katalepsis tells you to add `--install-browsers`. No AI key is involved.
 
 Each run folder can be zipped and attached to the pull request as it is:
 

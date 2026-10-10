@@ -22,7 +22,8 @@ import {
 } from "@katalepsis/core";
 import type { LanguageModel } from "ai";
 import { Effect, Schema } from "effect";
-import { chromium, type Browser } from "playwright-core";
+import type { Browser } from "playwright-core";
+import { launchAgentBrowser } from "./browser-install.ts";
 import { CheckSession } from "./browser.ts";
 import type { AgentCheck, ChecksFile } from "./checks.ts";
 import { decideOutcome, type AssertionRecord, type Interruption, type Outcome } from "./outcome.ts";
@@ -315,7 +316,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
         const secrets = [...previewUrlSecrets(preview), ...setup.secrets];
         const project = `${setup.info.provider}/${setup.info.id}`;
 
-        const browser = yield* Effect.result(openBrowser(options.launchBrowser ?? (() => chromium.launch())));
+        const browser = yield* Effect.result(openBrowser(options.launchBrowser ?? (() => launchAgentBrowser())));
         if (browser._tag === "Failure") {
           const message = `The browser could not start: ${redact(browser.failure, secrets)}`;
           return {

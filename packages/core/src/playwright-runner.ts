@@ -46,6 +46,15 @@ export class PlaywrightRunner extends Context.Service<
     readonly run: (
       options: PlaywrightRunOptions,
     ) => Effect.Effect<PlaywrightRunResult, PlaywrightProcessError | ReporterOutputError>;
+    /**
+     * Runs the project's own `playwright install`, so the browsers match the Playwright
+     * version its tests use. Returns the installer's output.
+     */
+    readonly installBrowsers: (
+      cwd: string,
+      install: PlaywrightInstall,
+      signal: AbortSignal,
+    ) => Effect.Effect<string, PlaywrightProcessError>;
   }
 >()("katalepsis/PlaywrightRunner") {}
 
@@ -213,8 +222,30 @@ const baseEnv = (jsonFile: string): NodeJS.ProcessEnv => ({
   FORCE_COLOR: "0",
 });
 
+const INSTALL_TIMEOUT_MS = 15 * 60_000;
+
 export const PlaywrightRunnerLive = Layer.succeed(PlaywrightRunner, {
   locate,
+  installBrowsers: (cwd, install, signal) =>
+    runProcess(
+      [install.cliPath, "install"],
+      cwd,
+      { ...process.env, FORCE_COLOR: "0" },
+      INSTALL_TIMEOUT_MS,
+      signal,
+    ).pipe(
+      Effect.flatMap((result) =>
+        result.exitCode === 0
+          ? Effect.succeed(result.output)
+          : Effect.fail(
+              new PlaywrightProcessError({
+                message: `playwright install exited with code ${result.exitCode ?? "unknown"}.`,
+                retryable: true,
+                output: result.output,
+              }),
+            ),
+      ),
+    ),
   list: (selection) =>
     runProcess(
       [selection.install.cliPath, "test", "--list", "--reporter=json", ...selectionArgs(selection)],

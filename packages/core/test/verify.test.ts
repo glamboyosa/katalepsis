@@ -52,13 +52,18 @@ type FakeRunner = {
   listedFiltered?: PlaywrightJsonReport;
   run?: () => Effect.Effect<PlaywrightJsonReport, PlaywrightProcessError>;
   list?: (selection: PlaywrightSelection) => Effect.Effect<PlaywrightJsonReport, ReporterOutputError>;
+  install?: () => Effect.Effect<string, PlaywrightProcessError>;
 };
 
 const layers = (fake: FakeRunner, probe: ProbeResult = { reachable: true }) => {
-  const calls = { run: 0, baseUrls: [] as Array<string>, listBaseUrls: [] as Array<string> };
+  const calls = { run: 0, installs: 0, baseUrls: [] as Array<string>, listBaseUrls: [] as Array<string> };
   const layer = Layer.mergeAll(
     Layer.succeed(PlaywrightRunner, {
       locate: () => Effect.succeed({ cliPath: "/fake/cli.js", version: "1.63.0" }),
+      installBrowsers: () => {
+        calls.installs += 1;
+        return fake.install?.() ?? Effect.succeed("installed");
+      },
       list: (selection) => {
         calls.listBaseUrls.push(selection.baseUrl);
         if (fake.list) return fake.list(selection);
@@ -131,6 +136,73 @@ describe("verifyWithPlaywright", () => {
     const persisted = await bundleText(outcome.bundleDir);
     expect(persisted).not.toContain(SECRET);
     expect(persisted).toContain("x-vercel-protection-bypass=REDACTED");
+  });
+
+  it("installs browsers first only when asked", async () => {
+    const { layer, calls } = layers({ run: () => Effect.succeed(report([{ title: "signs up", tests: [test()] }])) });
+    await Effect.runPromise(verifyWithPlaywright(options()).pipe(Effect.provide(layer)));
+    expect(calls.installs).toBe(0);
+    await Effect.runPromise(verifyWithPlaywright(options({ installBrowsers: true })).pipe(Effect.provide(layer)));
+    expect(calls.installs).toBe(1);
+  });
+
+  it("records a failed browser install as a browser error and still runs the tests", async () => {
+    const { layer, calls } = layers({
+      install: () =>
+        Effect.fail(
+          new PlaywrightProcessError({
+            message: "playwright install exited with code 1.",
+            retryable: true,
+            output: "",
+          }),
+        ),
+      run: () =>
+        Effect.succeed(
+          report([
+            { title: "signs up", tests: [test()] },
+            { title: "rejects a bad email", tests: [test()] },
+          ]),
+        ),
+    });
+    const outcome = await Effect.runPromise(
+      verifyWithPlaywright(options({ installBrowsers: true })).pipe(Effect.provide(layer)),
+    );
+    expect(calls.run).toBe(1);
+    expect(outcome.run.errors).toEqual([
+      {
+        category: "browser",
+        message: "playwright install exited with code 1.",
+        stage: "browser-install",
+        retryable: true,
+      },
+    ]);
+  });
+
+  it("tells you how to install browsers when one could not start", async () => {
+    const { layer } = layers({
+      run: () =>
+        Effect.succeed(
+          report([
+            {
+              title: "signs up",
+              tests: [
+                test({
+                  status: "unexpected",
+                  results: [
+                    result({
+                      status: "failed",
+                      error: { message: "browserType.launch: Executable doesn't exist at /x" },
+                    }),
+                  ],
+                }),
+              ],
+            },
+            { title: "rejects a bad email", tests: [test()] },
+          ]),
+        ),
+    });
+    const outcome = await Effect.runPromise(verifyWithPlaywright(options()).pipe(Effect.provide(layer)));
+    expect(outcome.run.coverageLimitations.join("\n")).toContain("--install-browsers");
   });
 
   it("blocks every selected test without running Playwright when the preview is down", async () => {
@@ -326,6 +398,7 @@ describe("verifyWithPlaywright", () => {
       base.layer,
       Layer.succeed(PlaywrightRunner, {
         locate: () => Effect.succeed({ cliPath: "/fake/cli.js", version: "1.63.0" }),
+        installBrowsers: () => Effect.succeed("installed"),
         list: () => failingList,
         run: () => Effect.succeed({ report: report([]), exitCode: 1, output: "" }),
       }),

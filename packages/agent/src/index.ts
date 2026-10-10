@@ -5,3 +5,4 @@ export * from "./run-check.ts";
 export * from "./models.ts";
 export * from "./verify-agent.ts";
 export * from "./setup.ts";
+export * from "./browser-install.ts";

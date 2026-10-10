@@ -90,6 +90,42 @@
         </ul>
       </section>
 
+      <section class="ways wrap" aria-labelledby="ways-title">
+        <h2 id="ways-title">Four ways to run it</h2>
+        <div class="way-grid">
+          <article>
+            <code>katalepsis run</code>
+            <h3>Your Playwright tests</h3>
+            <p>
+              Runs the tests you already have against the preview. No AI key, and
+              <code>--install-browsers</code> fetches whatever Playwright needs.
+            </p>
+          </article>
+          <article>
+            <code>katalepsis verify</code>
+            <h3>Checks without tests</h3>
+            <p>
+              Describe what should happen and a model works through it in a real browser on your OpenAI or OpenRouter
+              key.
+            </p>
+          </article>
+          <article>
+            <code>MCP server</code>
+            <h3>From your coding agent</h3>
+            <p>
+              Claude Code, Codex or Cursor can run tests and checks, then read the report, without you typing a command.
+            </p>
+          </article>
+          <article>
+            <code>CI job</code>
+            <h3>On every pull request</h3>
+            <p>
+              Run either command in a CI job and upload the report folder. A ready-made GitHub Action isn't built yet.
+            </p>
+          </article>
+        </div>
+      </section>
+
       <section class="states wrap" aria-labelledby="states-title">
         <h2 id="states-title">Every check ends up passed, failed, blocked or not tested</h2>
         <p class="section-lede">

@@ -163,6 +163,7 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
           projects: input.project ?? [],
           grep: input.grep ?? null,
           timeoutMs: (input.timeoutSeconds ?? DEFAULT_RUN_TIMEOUT_SECONDS) * 1000,
+          installBrowsers: input.installBrowsers ?? false,
           environment: "mcp",
           toolVersion: options.version,
           signal,

@@ -35,6 +35,8 @@ export type VerifyOptions = {
   readonly projects: ReadonlyArray<string>;
   readonly grep: string | null;
   readonly timeoutMs: number;
+  /** Run the project's own `playwright install` before the tests. */
+  readonly installBrowsers?: boolean;
   readonly environment: string;
   readonly toolVersion: string;
   /** Aborting it stops Playwright; the run is then reported as blocked. */
@@ -334,6 +336,15 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
         };
         const filtered = options.projects.length > 0 || options.grep !== null;
         const startedIso = startedAt.toISOString();
+        const installError: RunError | null =
+          options.installBrowsers === true
+            ? yield* runner.installBrowsers(options.cwd, install, options.signal).pipe(
+                Effect.as(null),
+                Effect.catch((error) =>
+                  Effect.succeed<RunError>({ ...processError(error, "browser-install", secrets), category: "browser" }),
+                ),
+              )
+            : null;
         const selected = yield* listTests(selection, bundleDir, "list-selected", secrets, startedIso);
         const listFailed = selected.listing.error !== null;
         const listAll = filtered && !listFailed && !options.signal.aborted;
@@ -365,6 +376,7 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
         const unreported = notTested.filter((item) => item.reason === NO_RESULT).length;
         const listErrors = listAll ? [selected.listing.error, all.listing.error] : [selected.listing.error];
         const errors = [
+          ...(installError === null ? [] : [installError]),
           ...listErrors.filter((error) => error !== null),
           ...execution.errors,
           // Tests that were listed but never reported are not a deliberate gap, so they block the run.
@@ -414,6 +426,11 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
                 ]
               : []),
             ...execution.limitations,
+            ...(checks.some((check) => check.failure?.code === "browser")
+              ? [
+                  "A browser could not start. Run again with --install-browsers to install the browsers this project's Playwright version needs.",
+                ]
+              : []),
           ],
           evidence,
           errors,

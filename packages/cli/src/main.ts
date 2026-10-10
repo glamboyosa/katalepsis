@@ -16,7 +16,7 @@ const packageJson = createRequire(import.meta.url)("../package.json") as { versi
 const USAGE = `Usage:
   katalepsis init [--cwd <dir>]
   katalepsis run --url <preview-url> [--cwd <dir>] [--config <file>] [--project <name>]... [--grep <pattern>]
-               [--out <dir>] [--timeout <seconds>] [--env <label>]
+               [--out <dir>] [--timeout <seconds>] [--env <label>] [--install-browsers]
   katalepsis verify --url <preview-url> --checks <checks.json> [--provider <openai|openrouter>] [--model <id>]
                   [--allow-origin <url>]... [--max-steps <n>] [--max-tokens <n>] [--check-timeout <seconds>]
                   [--cwd <dir>] [--out <dir>] [--env <label>]
@@ -64,6 +64,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       timeout: { type: "string" },
       env: { type: "string" },
       print: { type: "boolean" },
+      "install-browsers": { type: "boolean" },
       checks: { type: "string" },
       provider: { type: "string" },
       model: { type: "string" },
@@ -100,6 +101,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       timeoutSeconds: parsePositiveInt(values.timeout, DEFAULT_TIMEOUT_SECONDS, "--timeout"),
       environment: values.env ?? "local",
       version: packageJson.version,
+      installBrowsers: values["install-browsers"] ?? false,
     });
   }
   if (command === "verify") {
