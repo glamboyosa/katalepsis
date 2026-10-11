@@ -17,6 +17,7 @@ const types = {
   ".png": "image/png",
   ".mp4": "video/mp4",
   ".txt": "text/plain; charset=utf-8",
+  ".md": "text/markdown; charset=utf-8",
 };
 
 createServer(async (request, response) => {

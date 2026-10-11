@@ -208,6 +208,10 @@ h1 {
 .command code {
   font-size: 0.86rem;
 }
+.command .label {
+  color: var(--text);
+  font-family: inherit;
+}
 .command b {
   /* Wide enough for the longest label, "select it", so swapping labels never moves the layout. */
   min-width: 10.5ch;
