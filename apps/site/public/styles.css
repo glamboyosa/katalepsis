@@ -736,6 +736,26 @@ h2 {
   border: 1px solid var(--line);
   border-radius: 12px;
 }
+.way-grid article.soon {
+  position: relative;
+  overflow: hidden;
+  padding-top: 52px;
+  border-style: dashed;
+}
+.way-grid article.soon > :not(.soon-banner) {
+  opacity: 0.6;
+}
+.soon-banner {
+  position: absolute;
+  inset: 0 0 auto;
+  padding: 7px 22px;
+  color: var(--block);
+  background: color-mix(in srgb, var(--block) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--block) 30%, transparent);
+  font: 600 0.7rem/1.2 var(--font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 .way-grid > article > code {
   color: var(--pass);
   font-size: 0.8rem;

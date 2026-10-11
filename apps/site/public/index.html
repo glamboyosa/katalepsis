@@ -111,16 +111,14 @@
         <span>Built for</span>
         <ul>
           <li>Playwright</li>
-          <li>Claude Code</li>
-          <li>Codex</li>
-          <li>Cursor</li>
+          <li>Any MCP agent harness</li>
           <li>OpenAI</li>
           <li>OpenRouter</li>
         </ul>
       </section>
 
       <section class="ways wrap" aria-labelledby="ways-title">
-        <h2 id="ways-title">Four ways to run it</h2>
+        <h2 id="ways-title">Ways to run it</h2>
         <div class="way-grid">
           <article>
             <code>katalepsis run</code>
@@ -142,15 +140,15 @@
             <code>MCP server</code>
             <h3>From your coding agent</h3>
             <p>
-              Claude Code, Codex or Cursor can run tests and checks, then read the report, without you typing a command.
+              Whatever agent harness you use can run tests and checks, then read the report, without you typing a
+              command.
             </p>
           </article>
-          <article>
+          <article class="soon">
+            <span class="soon-banner">Coming soon</span>
             <code>CI job</code>
             <h3>On every pull request</h3>
-            <p>
-              Run either command in a CI job and upload the report folder. A ready-made GitHub Action isn't built yet.
-            </p>
+            <p>A ready-made job that runs on each pull request and attaches the report.</p>
           </article>
         </div>
       </section>
@@ -252,7 +250,7 @@
           <p class="eyebrow">MCP</p>
           <h2>Your coding agent can check its own work</h2>
           <p>
-            katalepsis runs as an MCP server, so Claude Code, Codex or Cursor can test a preview and read the report
+            katalepsis runs as an MCP server, so whatever agent harness you use can test a preview and read the report
             without you in the loop. Same rules: the agent gets results, not a browser it can talk its way through.
           </p>
           <ul class="ticks">

@@ -1,4 +1,4 @@
-# Using katalepsis from Claude Code, Codex or Cursor
+# Using katalepsis from your agent harness
 
 katalepsis ships a local MCP server. A coding agent can run your Playwright tests against a preview, run agent checks, and read reports, without you typing CLI commands. The same rules apply as on the command line: a check passes only on browser evidence, and the server never takes an API key as an argument.
 

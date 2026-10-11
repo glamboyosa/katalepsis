@@ -38,12 +38,12 @@ To uninstall, run `katalepsis auth forget` for each provider you saved, then del
 
 ## Ways to use it
 
-| You want to                                          | Use                                                                        | You need                                                                                                                |
-| ---------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Run your existing Playwright tests against a preview | `katalepsis run`                                                           | A project with Playwright tests. No AI key.                                                                             |
-| Check behaviour nobody has written a test for        | `katalepsis verify`                                                        | An OpenAI or OpenRouter key                                                                                             |
-| Let Claude Code, Codex or Cursor run either of those | The MCP server in `packages/mcp`                                           | The client set up as in [docs/mcp.md](docs/mcp.md)                                                                      |
-| Run it in CI                                         | `katalepsis run` or `verify` in a job, then upload `artifacts/katalepsis/` | Node and pnpm in the job, keys as secrets for `verify`. Not tested in CI yet, and there is no ready-made GitHub Action. |
+| You want to                                          | Use                              | You need                                                                                                               |
+| ---------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Run your existing Playwright tests against a preview | `katalepsis run`                 | A project with Playwright tests. No AI key.                                                                            |
+| Check behaviour nobody has written a test for        | `katalepsis verify`              | An OpenAI or OpenRouter key                                                                                            |
+| Let your agent harness run either of those           | The MCP server in `packages/mcp` | Any harness that speaks MCP, set up as in [docs/mcp.md](docs/mcp.md)                                                   |
+| Run it on every pull request                         | Coming soon: a ready-made CI job | Until then, `katalepsis run` or `verify` in your own job works, untested in CI so far. Upload `artifacts/katalepsis/`. |
 
 Every one of these writes the same report folder.
 
@@ -123,15 +123,15 @@ katalepsis: FAILED (openrouter/anthropic/claude-haiku-5.5)
 
 Each check is limited by `--max-steps` (15), `--max-tokens` (200,000) and `--check-timeout` (120 seconds). The browser can't leave the preview's origin unless you add `--allow-origin <url>`. In CI, keys come only from environment variables.
 
-## From Claude Code, Codex or Cursor
+## From your agent harness
 
-`packages/mcp` is a local MCP server with three tools: run the tests, run agent checks, and read a report. It never takes a key as an argument and only works inside the folder you give it. For Codex:
+`packages/mcp` is a local MCP server with three tools: run the tests, run agent checks, and read a report. Any agent harness that speaks MCP can use it. It never takes a key as an argument and only works inside the folder you give it. For example, with Codex:
 
 ```bash
 codex mcp add katalepsis -- katalepsis-mcp --root /path/to/your-app
 ```
 
-In `~/.codex/config.toml`, set `tool_timeout_sec = 600` for it, since Codex's default is 60 seconds, and `default_tools_approval_mode = "approve"` if you use `codex exec`, which can't ask before a tool call. Claude Code and Cursor setup is in [docs/mcp.md](docs/mcp.md).
+In `~/.codex/config.toml`, set `tool_timeout_sec = 600` for it, since Codex's default is 60 seconds, and `default_tools_approval_mode = "approve"` if you use `codex exec`, which can't ask before a tool call. Setup for other harnesses, including Claude Code and Cursor, is in [docs/mcp.md](docs/mcp.md).
 
 <details>
 <summary>How results are decided</summary>
