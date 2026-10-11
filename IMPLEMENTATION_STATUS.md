@@ -129,7 +129,7 @@ M2, on macOS with Node 23.9.0, demo form at `http://127.0.0.1:4173`:
 
 - **External-developer gate not done.** The M1 gate needs another developer to install from the README, run their own suite and attach the bundle to a PR without help. That has not happened.
 - **Not published to npm.** `install.sh` builds katalepsis from GitHub and puts `katalepsis` and `katalepsis-mcp` launchers in `~/.local/bin`.
-- **Base URL wiring is trusted, not verified.** Playwright's JSON report does not include `use.baseURL`, so katalepsis cannot prove the config read `KATALEPSIS_BASE_URL`. When the config file doesn't mention it at all, `run` prints a warning and the report says the tests most likely ran against the config's own baseURL. Conclave and gc-exp both hardcode their baseURL.
+- **Base URL wiring is trusted, not verified.** Playwright's JSON report does not include `use.baseURL`, so katalepsis cannot prove the config read `KATALEPSIS_BASE_URL`. When the config file doesn't mention it at all, `run` prints a warning and the report says the tests most likely ran against the config's own baseURL. Conclave and a work project both hardcode their baseURL.
 - **The project's reporters are replaced** by the JSON reporter during a katalepsis run.
 - **Evidence is not redacted.** Screenshots, videos and traces are copied as Playwright wrote them. The report warns about this.
 - **Inline attachments** (`testInfo.attach` with a body instead of a path) are counted but not bundled.
