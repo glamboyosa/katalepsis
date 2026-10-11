@@ -19,17 +19,17 @@ That is a real run against the signup form in `apps/demo-form`, which has a deli
 Paste this into Claude Code, Codex, Cursor or any other coding agent:
 
 ```text
-Set up katalepsis for me by following https://katalepsis.glamboyosa.xyz/agents.md
+Set up katalepsis for me by following https://www.katalepsis.glamboyosa.xyz/agents.md
 ```
 
-[`agents.md`](apps/site/public/agents.md) walks the agent through the prerequisites, the installer, the project's Playwright config and connecting the MCP server to its own harness. It tells the agent to leave API keys to you. There is also an [`llms.txt`](https://katalepsis.glamboyosa.xyz/llms.txt).
+[`agents.md`](apps/site/public/agents.md) walks the agent through the prerequisites, the installer, the project's Playwright config and connecting the MCP server to its own harness. It tells the agent to leave API keys to you. There is also an [`llms.txt`](https://www.katalepsis.glamboyosa.xyz/llms.txt).
 
 ### Install it yourself
 
 Needs Node 22.12 or newer, git, and pnpm 10 (or corepack, which comes with Node). katalepsis is not on npm yet, so the installer builds it from this repository:
 
 ```bash
-curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh
+curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh
 ```
 
 The address redirects to [`install.sh`](install.sh) in this repository.

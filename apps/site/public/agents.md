@@ -19,7 +19,7 @@ You need Node 22.12 or newer, git, and either pnpm 10 or corepack (corepack ship
 katalepsis is not on npm. The installer clones the repository into `~/.local/share/katalepsis`, builds it, and writes two launchers, `katalepsis` and `katalepsis-mcp`, into `~/.local/bin`. It never asks for input.
 
 ```bash
-curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh
+curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh
 ```
 
 It prints `Installed katalepsis <version> to <dir>` on success. If it also prints that `~/.local/bin` is not on `PATH`, call the tools by full path (`~/.local/bin/katalepsis`) for the rest of this guide, and tell the user to add the `export PATH=...` line it printed to their shell profile. Do not edit their shell profile yourself.

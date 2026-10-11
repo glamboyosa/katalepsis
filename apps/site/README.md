@@ -10,7 +10,7 @@ Then open http://127.0.0.1:4321.
 
 ## Deploying
 
-The site is meant for https://katalepsis.glamboyosa.xyz. On Vercel, set the project's root directory to `apps/site`. `vercel.json` serves `public/` as is and redirects `/install.sh` to the installer on GitHub, so `curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh` works once the domain points at the deployment.
+The site is meant for https://www.katalepsis.glamboyosa.xyz. On Vercel, set the project's root directory to `apps/site`. `vercel.json` serves `public/` as is and redirects `/install.sh` to the installer on GitHub, so `curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh` works once the domain points at the deployment.
 
 ## Product video
 

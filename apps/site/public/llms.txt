@@ -2,11 +2,11 @@
 
 > A command-line tool and local MCP server that runs a project's Playwright tests, or plain-English checks driven by a model, against a preview deployment and writes a report for the pull request. Every check ends up passed, failed, blocked or not tested.
 
-katalepsis is not on npm. Install it with `curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh`, which needs Node 22.12 or newer, git and pnpm or corepack. Agents setting it up for a user should follow the install guide below.
+katalepsis is not on npm. Install it with `curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh`, which needs Node 22.12 or newer, git and pnpm or corepack. Agents setting it up for a user should follow the install guide below.
 
 ## Docs
 
-- [Install guide for coding agents](https://katalepsis.glamboyosa.xyz/agents.md): prerequisites, installer, project setup, MCP setup per harness, keys
+- [Install guide for coding agents](https://www.katalepsis.glamboyosa.xyz/agents.md): prerequisites, installer, project setup, MCP setup per harness, keys
 - [README](https://github.com/glamboyosa/katalepsis/blob/main/README.md): commands, report layout, how results are decided, exit codes
 - [MCP setup](https://github.com/glamboyosa/katalepsis/blob/main/docs/mcp.md): the three MCP tools and setup for Claude Code, Codex and Cursor
 

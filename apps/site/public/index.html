@@ -14,9 +14,9 @@
       content="Run your Playwright tests against a preview URL and paste the report into the pull request."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://katalepsis.glamboyosa.xyz/" />
+    <meta property="og:url" content="https://www.katalepsis.glamboyosa.xyz/" />
     <meta property="og:site_name" content="katalepsis" />
-    <meta property="og:image" content="https://katalepsis.glamboyosa.xyz/og.png" />
+    <meta property="og:image" content="https://www.katalepsis.glamboyosa.xyz/og.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
@@ -29,8 +29,8 @@
       name="twitter:description"
       content="Run your Playwright tests against a preview URL and paste the report into the pull request."
     />
-    <meta name="twitter:image" content="https://katalepsis.glamboyosa.xyz/og.png" />
-    <link rel="canonical" href="https://katalepsis.glamboyosa.xyz/" />
+    <meta name="twitter:image" content="https://www.katalepsis.glamboyosa.xyz/og.png" />
+    <link rel="canonical" href="https://www.katalepsis.glamboyosa.xyz/" />
     <title>katalepsis | Receipts for every preview</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -41,6 +41,11 @@
     />
     <link rel="preload" as="image" href="/report.png" />
     <link rel="stylesheet" href="/styles.css" />
+    <!-- Vercel Web Analytics. Vercel serves the script once analytics is enabled on the project, so it 404s locally. -->
+    <script>
+      window.va = window.va || ((...args) => (window.vaq = window.vaq || []).push(args));
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
   </head>
   <body>
     <div class="grid-bg" aria-hidden="true"></div>
@@ -89,14 +94,14 @@
           <button
             class="button command"
             type="button"
-            data-copy="curl -fsSL https://katalepsis.glamboyosa.xyz/install.sh | sh"
+            data-copy="curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh"
           >
             <span aria-hidden="true">$</span><code>curl -fsSL …/install.sh | sh</code><b aria-live="polite">copy</b>
           </button>
           <button
             class="button command"
             type="button"
-            data-copy="Set up katalepsis for me by following https://katalepsis.glamboyosa.xyz/agents.md"
+            data-copy="Set up katalepsis for me by following https://www.katalepsis.glamboyosa.xyz/agents.md"
             aria-label="Let your agent set it up: copy the setup prompt"
           >
             <span class="label">Let your agent set it up</span><b aria-live="polite">copy</b>
