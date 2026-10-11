@@ -52,6 +52,7 @@ tool_timeout_sec = 600
 # Lets Codex call katalepsis without asking each time. Use "prompt" to be asked instead.
 default_tools_approval_mode = "approve"
 # Only needed if your key is in an environment variable rather than the keychain.
+# List your provider's variable: ANTHROPIC_API_KEY, OPENAI_API_KEY or OPENROUTER_API_KEY.
 env_vars = ["OPENROUTER_API_KEY"]
 ```
 

@@ -78,7 +78,9 @@ describe.runIf(live)("katalepsis verify with a real model", () => {
     ]);
     const key = process.env["OPENAI_API_KEY"] ?? "";
     const routerKey = process.env["OPENROUTER_API_KEY"] ?? "";
+    const anthropicKey = process.env["ANTHROPIC_API_KEY"] ?? "";
     const text = JSON.stringify(manifest) + (await readFile(path.join(bundle, "report.md"), "utf8"));
-    for (const secret of [key, routerKey].filter((value) => value.length > 0)) expect(text).not.toContain(secret);
+    for (const secret of [key, routerKey, anthropicKey].filter((value) => value.length > 0))
+      expect(text).not.toContain(secret);
   });
 });

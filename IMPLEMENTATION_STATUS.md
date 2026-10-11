@@ -36,13 +36,13 @@ Last updated: 2026-10-10.
 Checklist and deviations from the plan, set at the start of the milestone:
 
 - Credentials: environment, then OS keychain (`@napi-rs/keyring`), never the keychain in CI. `auth set/status/forget`, `config provider/model/show`, `models <provider>`.
-- Providers: OpenAI and OpenRouter through AI SDK 7 (`ToolLoopAgent`). Model IDs are checked against the provider catalog before any check runs. No default model.
+- Providers: Anthropic, OpenAI and OpenRouter through AI SDK 7 (`ToolLoopAgent`). Model IDs are checked against the provider catalog before any check runs. No default model.
 - Browser: `playwright-core` driven directly, not Playwright MCP (allowed by the plan; see ADR 0002). One isolated context per check, with tracing.
 - Checks file: `id`, `name`, `intent`, `passCondition`, optional `startPath`, validated with Effect Schema. Free-form prose is rejected.
 - Evidence rule: a pass needs a cited, passing browser assertion; anything else unproven is blocked. See [ADR 0002](docs/adr/0002-agent-checks-and-byok.md).
 - Limits: steps, tokens and time per check; navigation outside the allowlist blocks the check; Ctrl-C stops the run.
 - Same report schema and renderers as M1, with `source: "agent"` and the run's `model`.
-- Not done: Anthropic, Google and OpenAI-compatible endpoints; Claude Code or Codex integration, which belongs to M3's MCP server.
+- Not done: Google and OpenAI-compatible endpoints; Claude Code or Codex integration, which belongs to M3's MCP server.
 
 Live runs on the demo form found three bugs that the fake-model tests then pinned:
 

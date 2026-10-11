@@ -108,19 +108,21 @@ More detail, including what was tested with each harness: https://github.com/gla
 
 ## 5. Agent checks need a key, and the user must enter it
 
-Running the project's Playwright tests needs no AI key. Agent checks (`katalepsis verify` and `verification_check_browser`) need an OpenAI or OpenRouter key.
+Running the project's Playwright tests needs no AI key. Agent checks (`katalepsis verify` and `verification_check_browser`) need an Anthropic, OpenAI or OpenRouter key.
 
 Never ask the user to paste a key into the chat, never put a key in a command, a file or an MCP argument, and never read one back. Ask the user to run this themselves in their own terminal. It reads the key without echoing it and stores it in the OS keychain:
 
 ```bash
-katalepsis auth set openrouter
+katalepsis auth set anthropic
 ```
+
+Use `openai` or `openrouter` instead if that is the key they have.
 
 Once they have, you can choose the provider and model:
 
 ```bash
-katalepsis config provider openrouter
-katalepsis models openrouter
+katalepsis config provider anthropic
+katalepsis models anthropic
 katalepsis config model <model-id>
 ```
 

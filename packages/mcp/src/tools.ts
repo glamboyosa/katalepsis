@@ -1,4 +1,5 @@
 import { ChecksFile } from "@katalepsis/agent";
+import { Provider } from "@katalepsis/credentials";
 import type { StandardSchemaWithJSON } from "@modelcontextprotocol/server";
 import { Schema } from "effect";
 
@@ -22,7 +23,7 @@ export const CheckBrowserInput = Schema.Struct({
   // The checks file schema, so duplicate IDs and bad fields are rejected the same way.
   checks: ChecksFile.fields.checks,
   cwd: Schema.optionalKey(ProjectPath),
-  provider: Schema.optionalKey(Schema.Literals(["openai", "openrouter"])),
+  provider: Schema.optionalKey(Provider),
   model: Schema.optionalKey(Schema.String.check(Schema.isNonEmpty())),
   allowOrigins: Schema.optionalKey(Schema.Array(Url)),
 });
@@ -83,7 +84,7 @@ export const TOOLS = {
   verification_check_browser: {
     title: "Run agent checks against a preview",
     description:
-      "Runs plain-language checks in a real browser using the user's locally configured OpenAI or OpenRouter key. Each check needs id (lowercase letters, digits and hyphens, unique), name, intent and passCondition, and may set startPath (a path starting with /) and observeOnly. A check passes only when browser assertions prove it. Never pass API keys; they are read from the user's environment or keychain.",
+      "Runs plain-language checks in a real browser using the user's locally configured Anthropic, OpenAI or OpenRouter key. Each check needs id (lowercase letters, digits and hyphens, unique), name, intent and passCondition, and may set startPath (a path starting with /) and observeOnly. A check passes only when browser assertions prove it. Never pass API keys; they are read from the user's environment or keychain.",
     inputSchema: toolInput(CheckBrowserInput),
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },

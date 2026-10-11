@@ -20,7 +20,7 @@ const update = async (change: Partial<Preferences>): Promise<string> => {
 };
 
 export const configProviderCommand = async (value: string | undefined): Promise<number> => {
-  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(" or ")}.`);
+  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(", ")}.`);
   const current = await run(loadPreferences(process.env));
   // Model IDs differ between providers, so a model saved for another provider is dropped.
   const keepModel = current.provider === value || current.provider === undefined;
@@ -46,7 +46,7 @@ export const configModelCommand = async (value: string | undefined): Promise<num
   const preferences = await run(loadPreferences(process.env));
   const provider = preferences.provider;
   if (provider === undefined)
-    throw new Error("Choose a provider first: `katalepsis config provider <openai|openrouter>`.");
+    throw new Error("Choose a provider first: `katalepsis config provider <anthropic|openai|openrouter>`.");
   const credential = await run(resolveCredential(provider, process.env).pipe(Effect.provide(KeychainLive)));
   if (credential.key === null) {
     console.log(
@@ -73,10 +73,10 @@ export const configShowCommand = async (): Promise<number> => {
 
 /** Lists the provider's models, using the key when the catalog needs one. */
 export const modelsCommand = async (value: string | undefined): Promise<number> => {
-  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(" or ")}.`);
+  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(", ")}.`);
   const credential = await run(resolveCredential(value, process.env).pipe(Effect.provide(KeychainLive)));
-  if (value === "openai" && credential.key === null)
-    throw new Error("Listing OpenAI models needs a key: `katalepsis auth set openai`.");
+  if (value !== "openrouter" && credential.key === null)
+    throw new Error(`Listing ${value} models needs a key: \`katalepsis auth set ${value}\`.`);
   for (const id of await listModels(value, credential.key)) console.log(id);
   return EXIT.passed;
 };

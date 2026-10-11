@@ -17,17 +17,17 @@ const USAGE = `Usage:
   katalepsis init [--cwd <dir>]
   katalepsis run --url <preview-url> [--cwd <dir>] [--config <file>] [--project <name>]... [--grep <pattern>]
                [--out <dir>] [--timeout <seconds>] [--env <label>] [--install-browsers]
-  katalepsis verify --url <preview-url> --checks <checks.json> [--provider <openai|openrouter>] [--model <id>]
-                  [--allow-origin <url>]... [--max-steps <n>] [--max-tokens <n>] [--check-timeout <seconds>]
+  katalepsis verify --url <preview-url> --checks <checks.json> [--provider <anthropic|openai|openrouter>]
+                  [--model <id>] [--allow-origin <url>]... [--max-steps <n>] [--max-tokens <n>] [--check-timeout <seconds>]
                   [--cwd <dir>] [--out <dir>] [--env <label>]
   katalepsis report open [<run-id>] [--cwd <dir>] [--out <dir>] [--print]
-  katalepsis auth set <openai|openrouter>      Save a key in the OS keychain (read without echo)
-  katalepsis auth status                       Show where each key comes from
-  katalepsis auth forget <openai|openrouter>   Remove a key from the OS keychain
-  katalepsis config provider <openai|openrouter>
+  katalepsis auth set <anthropic|openai|openrouter>      Save a key in the OS keychain (read without echo)
+  katalepsis auth status                                 Show where each key comes from
+  katalepsis auth forget <anthropic|openai|openrouter>   Remove a key from the OS keychain
+  katalepsis config provider <anthropic|openai|openrouter>
   katalepsis config model <model-id>
   katalepsis config show
-  katalepsis models <openai|openrouter>        List model IDs from the provider
+  katalepsis models <anthropic|openai|openrouter>        List model IDs from the provider
 
 Exit codes: 0 passed, 1 failed, 2 blocked, 3 usage or setup error, 4 report could not be written.`;
 

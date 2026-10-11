@@ -12,7 +12,7 @@ import { EXIT, UsageError } from "../exit-codes.ts";
 import { readSecret } from "./secret-input.ts";
 
 const parseProvider = (value: string | undefined): Provider => {
-  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(" or ")}.`);
+  if (value === undefined || !isProvider(value)) throw new UsageError(`Name a provider: ${PROVIDERS.join(", ")}.`);
   return value;
 };
 

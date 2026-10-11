@@ -133,16 +133,24 @@
       <section class="works wrap" aria-label="Built for">
         <span>Built for</span>
         <ul>
-          <li>Playwright</li>
+          <li>Claude Code</li>
+          <li>Codex</li>
           <li>Any MCP agent harness</li>
-          <li>OpenAI</li>
-          <li>OpenRouter</li>
+          <li>Playwright</li>
         </ul>
       </section>
 
       <section class="ways wrap" aria-labelledby="ways-title">
         <h2 id="ways-title">Ways to run it</h2>
         <div class="way-grid">
+          <article>
+            <code>MCP server</code>
+            <h3>From your coding agent</h3>
+            <p>
+              Claude Code, Codex or any other MCP harness can run tests and checks, then read the report, without you
+              typing a command.
+            </p>
+          </article>
           <article>
             <code>katalepsis run</code>
             <h3>Your Playwright tests</h3>
@@ -155,16 +163,8 @@
             <code>katalepsis verify</code>
             <h3>Checks without tests</h3>
             <p>
-              Describe what should happen and a model works through it in a real browser on your OpenAI or OpenRouter
-              key.
-            </p>
-          </article>
-          <article>
-            <code>MCP server</code>
-            <h3>From your coding agent</h3>
-            <p>
-              Whatever agent harness you use can run tests and checks, then read the report, without you typing a
-              command.
+              Describe what should happen and a model works through it in a real browser on your Anthropic, OpenAI or
+              OpenRouter key.
             </p>
           </article>
           <article class="soon">
@@ -238,10 +238,10 @@
           <p class="eyebrow">Agent checks</p>
           <h2>Agent checks only pass when the browser agrees</h2>
           <p>
-            For the things nobody wrote a test for, describe what should happen. A model with your OpenAI or OpenRouter
-            key clicks through it in a real browser. To pass, it has to cite an assertion katalepsis ran that shows
-            something it changed. When one of the models we tested cited a heading that was already on the page, the
-            check was blocked.
+            For the things nobody wrote a test for, describe what should happen. A model with your Anthropic, OpenAI or
+            OpenRouter key clicks through it in a real browser. To pass, it has to cite an assertion katalepsis ran that
+            shows something it changed. When one of the models we tested cited a heading that was already on the page,
+            the check was blocked.
           </p>
           <ul class="ticks">
             <li>Keys stay in your keychain or environment</li>

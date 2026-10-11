@@ -76,9 +76,9 @@ export const resolveModelChoice = (
   const providerInput = flags.provider ?? setting(env, "KATALEPSIS_PROVIDER") ?? preferences.provider ?? null;
   const model = flags.model ?? setting(env, "KATALEPSIS_MODEL") ?? preferences.model ?? null;
   if (providerInput === null)
-    return { missing: "No provider chosen. Run `katalepsis config provider <openai|openrouter>`." };
+    return { missing: "No provider chosen. Run `katalepsis config provider <anthropic|openai|openrouter>`." };
   if (!Schema.is(Provider)(providerInput))
-    return { missing: `Unknown provider "${providerInput}". Use openai or openrouter.` };
+    return { missing: `Unknown provider "${providerInput}". Use anthropic, openai or openrouter.` };
   if (model === null || model.trim() === "")
     return { missing: "No model chosen. Run `katalepsis config model <model-id>`." };
   return { provider: providerInput, model: model.trim() };

@@ -44,7 +44,7 @@ What katalepsis touches on your machine:
 - `katalepsis auth set` stores a key in the OS keychain under the service name `katalepsis`. `katalepsis auth forget <provider>` removes it.
 - `katalepsis config` writes the chosen provider and model, never a key, to `~/.config/katalepsis/config.json` (or `$XDG_CONFIG_HOME/katalepsis`, or `$KATALEPSIS_HOME`).
 - Browsers go into Playwright's shared cache (`~/Library/Caches/ms-playwright` on macOS, `~/.cache/ms-playwright` on Linux), not your project. The agent's Chromium takes about 200 MB, and `--install-browsers` downloads whatever your Playwright version installs by default, about 1 GB for Chromium, Firefox and WebKit. Set `KATALEPSIS_NO_BROWSER_DOWNLOAD=1` to stop the automatic download.
-- katalepsis itself only calls your preview URL, Playwright's browser download servers when it installs a browser, and, for agent checks, OpenAI or OpenRouter with your key. Your own Playwright tests make whatever requests they already make.
+- katalepsis itself only calls your preview URL, Playwright's browser download servers when it installs a browser, and, for agent checks, Anthropic, OpenAI or OpenRouter with your key. Your own Playwright tests make whatever requests they already make.
 
 To uninstall, run `katalepsis auth forget` for each provider you saved, then delete the config folder, `~/.local/share/katalepsis`, and the two launchers in `~/.local/bin`.
 
@@ -52,9 +52,9 @@ To uninstall, run `katalepsis auth forget` for each provider you saved, then del
 
 | You want to                                          | Use                              | You need                                                                                                               |
 | ---------------------------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Let your coding agent run tests and checks           | The MCP server in `packages/mcp` | Claude Code, Codex or any harness that speaks MCP, set up as in [docs/mcp.md](docs/mcp.md)                             |
 | Run your existing Playwright tests against a preview | `katalepsis run`                 | A project with Playwright tests. No AI key.                                                                            |
-| Check behaviour nobody has written a test for        | `katalepsis verify`              | An OpenAI or OpenRouter key                                                                                            |
-| Let your agent harness run either of those           | The MCP server in `packages/mcp` | Any harness that speaks MCP, set up as in [docs/mcp.md](docs/mcp.md)                                                   |
+| Check behaviour nobody has written a test for        | `katalepsis verify`              | An Anthropic, OpenAI or OpenRouter key                                                                                 |
 | Run it on every pull request                         | Coming soon: a ready-made CI job | Until then, `katalepsis run` or `verify` in your own job works, untested in CI so far. Upload `artifacts/katalepsis/`. |
 
 Every one of these writes the same report folder.
@@ -97,10 +97,10 @@ Query values in the preview URL, where preview hosts often put bypass tokens, ar
 
 ## Agent checks
 
-For behaviour nobody has written a test for, describe the check and a model drives a real browser through it with your own OpenAI or OpenRouter key.
+For behaviour nobody has written a test for, describe the check and a model drives a real browser through it with your own Anthropic, OpenAI or OpenRouter key.
 
 ```bash
-katalepsis auth set openrouter            # or set OPENROUTER_API_KEY / OPENAI_API_KEY
+katalepsis auth set openrouter            # or anthropic / openai; or set OPENROUTER_API_KEY, ANTHROPIC_API_KEY or OPENAI_API_KEY
 katalepsis config provider openrouter
 katalepsis models openrouter              # lists real model IDs
 katalepsis config model <model-id>
@@ -183,7 +183,7 @@ Ctrl-C stops Playwright and its browsers and still writes a blocked report. A se
 ```text
 packages/core          result schemas, Playwright runner and report ingest, evidence store, renderers
 packages/credentials   keys (environment, then OS keychain) and non-secret preferences
-packages/agent         agent checks: browser tools, evidence rules, OpenAI and OpenRouter models
+packages/agent         agent checks: browser tools, evidence rules, Anthropic, OpenAI and OpenRouter models
 packages/mcp           the stdio MCP server
 packages/cli           the katalepsis command
 apps/demo-form         a signup form with a deliberate bug, three Playwright tests and checks.json

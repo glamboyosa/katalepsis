@@ -222,7 +222,12 @@ describe("katalepsis settings and errors", () => {
   let env: NodeJS.ProcessEnv;
   beforeAll(async () => {
     home = await mkdtemp(path.join(tmpdir(), "katalepsis-home-"));
-    const { OPENAI_API_KEY: _openai, OPENROUTER_API_KEY: _openrouter, ...rest } = process.env;
+    const {
+      ANTHROPIC_API_KEY: _anthropic,
+      OPENAI_API_KEY: _openai,
+      OPENROUTER_API_KEY: _openrouter,
+      ...rest
+    } = process.env;
     env = { ...rest, KATALEPSIS_HOME: home };
   });
   afterAll(async () => {

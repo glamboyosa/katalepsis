@@ -53,13 +53,13 @@ What this still does not prove: that the cited assertions are the right ones for
 
 Following [the reference review](../reference-review.md):
 
-- Lookup order: the provider's environment variable (`OPENAI_API_KEY`, `OPENROUTER_API_KEY`), then the OS keychain through `@napi-rs/keyring` (service `katalepsis`, account = provider). With `CI` set, the keychain is never read.
+- Lookup order: the provider's environment variable (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `OPENROUTER_API_KEY`), then the OS keychain through `@napi-rs/keyring` (service `katalepsis`, account = provider). With `CI` set, the keychain is never read.
 - `auth set` reads the key without echo, or from piped stdin, and writes it only to the keychain. `auth status` prints only the source. `auth forget` deletes the entry.
 - Provider and model live in `config.json` under `$KATALEPSIS_HOME`, `$XDG_CONFIG_HOME/katalepsis` or `~/.config/katalepsis`, with directory mode 0700 and file mode 0600. The schema has no field that could hold a key.
 - Choice order: `--provider`/`--model`, then `KATALEPSIS_PROVIDER`/`KATALEPSIS_MODEL`, then the saved preferences. There is no default model.
 - Before any check runs, the model ID is checked against the provider's catalog. OpenRouter's catalog is public, so its key is also checked against `GET /api/v1/key`. A missing key, rejected key or unknown model blocks every check with a `credentials` or `configuration` error.
 - Keys are held as Effect `Redacted` values. The key and the preview URL's query values are redacted from every text file in the bundle before it is written.
-- Providers: OpenAI (`@ai-sdk/openai`) and OpenRouter (`@openrouter/ai-sdk-provider`). Adding one means a branch in `createModel` and a catalog URL in `validateModel`.
+- Providers: Anthropic (`@ai-sdk/anthropic`), OpenAI (`@ai-sdk/openai`) and OpenRouter (`@openrouter/ai-sdk-provider`). Adding one means a branch in `createModel` and a catalog URL in `validateModel`. Anthropic is the exception: its catalog lists dated IDs but not aliases, so `validateModel` looks the model up with `GET /v1/models/{id}`, which resolves both.
 
 ### 4. Browser adapter
 

@@ -71,7 +71,8 @@ const safeEnv = (): Record<string, string> =>
   Object.fromEntries(
     Object.entries(process.env).filter(
       (entry): entry is [string, string] =>
-        entry[1] !== undefined && !/^(OPENAI_API_KEY|OPENROUTER_API_KEY|KATALEPSIS_.*)$/.test(entry[0]),
+        entry[1] !== undefined &&
+        !/^(ANTHROPIC_API_KEY|OPENAI_API_KEY|OPENROUTER_API_KEY|KATALEPSIS_.*)$/.test(entry[0]),
     ),
   );
 
@@ -140,7 +141,7 @@ describe("katalepsis MCP server", () => {
     expect(result.structuredContent?.["errors"]).toEqual([
       {
         category: "configuration",
-        message: "No provider chosen. Run `katalepsis config provider <openai|openrouter>`.",
+        message: "No provider chosen. Run `katalepsis config provider <anthropic|openai|openrouter>`.",
       },
     ]);
   });

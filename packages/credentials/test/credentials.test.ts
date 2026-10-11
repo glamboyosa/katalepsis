@@ -40,6 +40,12 @@ describe("resolveCredential", () => {
     expect(reads).toEqual([]);
   });
 
+  it("reads an Anthropic key from ANTHROPIC_API_KEY", async () => {
+    const { credential } = await resolve("anthropic", { ANTHROPIC_API_KEY: "anthropic-env-key" }, {});
+    expect(credential.source).toBe("environment");
+    expect(credential.key && Redacted.value(credential.key)).toBe("anthropic-env-key");
+  });
+
   it("falls back to the keychain when the variable is empty", async () => {
     const { credential } = await resolve("openrouter", { OPENROUTER_API_KEY: "  " }, { openrouter: "keychain-key" });
     expect(credential.source).toBe("keychain");
