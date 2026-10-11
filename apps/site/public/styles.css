@@ -201,7 +201,7 @@ h1 {
   background: var(--text);
   border-color: var(--text);
 }
-.command span {
+.command > span {
   color: var(--pass);
   font-family: var(--font-mono);
 }
@@ -211,6 +211,7 @@ h1 {
 .command .label {
   color: var(--text);
   font-family: inherit;
+  text-wrap: balance;
 }
 .command b {
   /* Wide enough for the longest label, "select it", so swapping labels never moves the layout. */
@@ -341,19 +342,20 @@ h1 {
 }
 /*
  * The lower chips sit beside the centred buttons. They are anchored to the centre, half the
- * button row (about 250px) plus a gap away, so they can never slide under the buttons.
+ * button row (about 421px with three buttons) plus a gap away, so they can never slide under
+ * the buttons. Widening the button row means raising this offset and the 1600px breakpoint.
  */
 .c3 {
   --resolve: 2.1s;
   top: 470px;
-  right: calc(50% + 298px);
+  right: calc(50% + 445px);
   animation-delay: 0.4s, -5s;
   opacity: 0.8;
 }
 .c5 {
   --resolve: 2.5s;
   top: 470px;
-  left: calc(50% + 298px);
+  left: calc(50% + 445px);
   animation-delay: 0.7s, -7s;
   opacity: 0.75;
 }
@@ -381,6 +383,8 @@ h1 {
     0 20px 60px rgb(0 0 0 / 0.6);
 }
 .shot img {
+  /* The crop cuts through the checks list, so fade it out instead of slicing a row in half. */
+  mask-image: linear-gradient(to bottom, #000 80%, transparent);
   width: 100%;
   height: auto;
   display: block;
@@ -613,6 +617,8 @@ h2 {
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+  align-content: center;
+  row-gap: 6px;
   color: var(--dim);
   font-size: 0.8rem;
   border-top: 1px solid var(--line);
@@ -637,12 +643,11 @@ h2 {
   outline-offset: 3px;
 }
 
-/* Below this width the anchored chips would run off the edge, so they are hidden. */
 /*
  * Below this width the floating chips would run off the edge or into the buttons, so they
  * become a row above the headline instead, with the same run and replay.
  */
-@media (max-width: 1280px) {
+@media (max-width: 1600px) {
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -701,7 +706,13 @@ h2 {
   .video {
     padding-top: 96px;
   }
-  .command code {
+}
+/*
+ * Below this width the full curl command pushes the buttons into ragged rows, so the button
+ * shows just "curl". It still copies the whole command.
+ */
+@media (max-width: 600px) {
+  .command .rest {
     display: none;
   }
 }

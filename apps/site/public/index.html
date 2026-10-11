@@ -58,7 +58,9 @@
       <nav aria-label="Primary">
         <a href="#how">How it works</a>
         <a href="#agents">Agents</a>
-        <a class="pill-link" href="https://github.com/glamboyosa/katalepsis">GitHub</a>
+        <a class="pill-link" href="https://github.com/glamboyosa/katalepsis" target="_blank" rel="noopener noreferrer"
+          >GitHub</a
+        >
       </nav>
     </header>
 
@@ -90,13 +92,21 @@
           tested.
         </p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/glamboyosa/katalepsis">Get it on GitHub</a>
+          <a
+            class="button primary"
+            href="https://github.com/glamboyosa/katalepsis"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Get it on GitHub</a
+          >
           <button
             class="button command"
             type="button"
             data-copy="curl -fsSL https://www.katalepsis.glamboyosa.xyz/install.sh | sh"
+            aria-label="Copy the install command: curl -fsSL …/install.sh | sh"
           >
-            <span aria-hidden="true">$</span><code>curl -fsSL …/install.sh | sh</code><b aria-live="polite">copy</b>
+            <span aria-hidden="true">$</span><code>curl<span class="rest"> -fsSL …/install.sh | sh</span></code
+            ><b aria-live="polite">copy</b>
           </button>
           <button
             class="button command"
@@ -314,8 +324,20 @@ runId, status and counts from the result.
           That's the bar I want an agent to clear before it tells me something is done.
         </p>
         <div class="actions">
-          <a class="button primary" href="https://github.com/glamboyosa/katalepsis">Get it on GitHub</a>
-          <a class="button" href="https://github.com/glamboyosa/katalepsis/blob/main/docs/mcp.md">Set up MCP</a>
+          <a
+            class="button primary"
+            href="https://github.com/glamboyosa/katalepsis"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Get it on GitHub</a
+          >
+          <a
+            class="button"
+            href="https://github.com/glamboyosa/katalepsis/blob/main/docs/mcp.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Set up MCP</a
+          >
         </div>
       </section>
     </main>
