@@ -1,6 +1,7 @@
 import path from "node:path";
 import { Effect, Layer } from "effect";
 import {
+  alignmentSummary,
   configMentionsBaseUrl,
   findPlaywrightConfig,
   PlaywrightRunnerLive,
@@ -23,6 +24,8 @@ export type RunArgs = {
   readonly version: string;
   /** Run the project's own `playwright install` first. */
   readonly installBrowsers: boolean;
+  /** The commit the preview was built from, when CI knows it. */
+  readonly previewCommit: string | null;
 };
 
 const LiveLayer = Layer.mergeAll(PlaywrightRunnerLive, PreviewProbeLive, RunMetadataLive);
@@ -49,6 +52,7 @@ export const runCommand = async (args: RunArgs): Promise<number> => {
     environment: args.environment,
     toolVersion: args.version,
     installBrowsers: args.installBrowsers,
+    previewCommit: args.previewCommit,
     signal: cancellation.signal,
   })
     .pipe(
@@ -58,6 +62,7 @@ export const runCommand = async (args: RunArgs): Promise<number> => {
         console.log(
           `  ${count("passed")} passed, ${count("failed")} failed, ${count("blocked")} blocked, ${run.notTested.length} not tested`,
         );
+        console.log(`  Preview commit: ${alignmentSummary(run)}`);
         for (const error of run.errors) console.log(`  ${error.category}: ${error.message}`);
         console.log(`  Report: ${path.join(bundleDir, "report.html")}`);
         console.log(`  Markdown: ${path.join(bundleDir, "report.md")}`);

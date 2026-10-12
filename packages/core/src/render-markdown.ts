@@ -1,3 +1,4 @@
+import { alignmentSummary } from "./preview-commit.ts";
 import {
   countByStatus,
   coverageSummary,
@@ -36,6 +37,7 @@ export const renderMarkdown = (run: VerificationRun): string => {
     "",
     `- Preview: ${md(run.previewUrl)}`,
     `- Commit: ${run.commitSha === null ? "unknown" : `\`${run.commitSha}\``}`,
+    `- Preview commit: ${run.previewCommit === null ? "" : `\`${run.previewCommit.sha}\`, `}${alignmentSummary(run)}`,
     `- Started: ${run.startedAt}`,
     `- Duration: ${formatDuration(run.durationMs)}`,
     `- Runner: katalepsis ${run.runner.katalepsis}, Playwright ${run.runner.playwright ?? "unknown"}, Node ${run.runner.node}`,

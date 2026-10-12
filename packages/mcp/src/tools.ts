@@ -7,6 +7,7 @@ import { Schema } from "effect";
 // null, which some clients send and the validator would then reject.
 const Url = Schema.String.check(Schema.isNonEmpty(), Schema.isMaxLength(2000));
 const ProjectPath = Schema.String.check(Schema.isMaxLength(500));
+const CommitSha = Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{7,40}$/));
 
 export const RunTestsInput = Schema.Struct({
   baseUrl: Url,
@@ -15,6 +16,7 @@ export const RunTestsInput = Schema.Struct({
   grep: Schema.optionalKey(Schema.String),
   timeoutSeconds: Schema.optionalKey(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 3600 }))),
   installBrowsers: Schema.optionalKey(Schema.Boolean),
+  previewCommit: Schema.optionalKey(CommitSha),
 });
 export type RunTestsInput = typeof RunTestsInput.Type;
 
@@ -26,6 +28,7 @@ export const CheckBrowserInput = Schema.Struct({
   provider: Schema.optionalKey(Provider),
   model: Schema.optionalKey(Schema.String.check(Schema.isNonEmpty())),
   allowOrigins: Schema.optionalKey(Schema.Array(Url)),
+  previewCommit: Schema.optionalKey(CommitSha),
 });
 export type CheckBrowserInput = typeof CheckBrowserInput.Type;
 
@@ -76,7 +79,7 @@ export const TOOLS = {
   verification_run_tests: {
     title: "Run Playwright tests against a preview",
     description:
-      "Runs the project's existing Playwright tests against a preview URL and writes a katalepsis report. Returns passed, failed, blocked and not-tested counts, each check's result and the report paths. Needs no AI key. Can take minutes. Set installBrowsers to run the project's own playwright install first, for example after a result says a browser could not start.",
+      "Runs the project's existing Playwright tests against a preview URL and writes a katalepsis report. Returns passed, failed, blocked and not-tested counts, each check's result and the report paths. Needs no AI key. Can take minutes. Set installBrowsers to run the project's own playwright install first, for example after a result says a browser could not start. katalepsis reads the commit the preview was built from in its x-commit-sha header or commit-sha meta tag; set previewCommit to the deployed commit for previews that report neither. A preview built from another commit than the checkout HEAD blocks a run that would pass.",
     inputSchema: toolInput(RunTestsInput),
     // Writes a report folder and loads the preview, but changes nothing it did not create.
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
@@ -84,7 +87,7 @@ export const TOOLS = {
   verification_check_browser: {
     title: "Run agent checks against a preview",
     description:
-      "Runs plain-language checks in a real browser using the user's locally configured Anthropic, OpenAI or OpenRouter key. Each check needs id (lowercase letters, digits and hyphens, unique), name, intent and passCondition, and may set startPath (a path starting with /) and observeOnly. A check passes only when browser assertions prove it. Never pass API keys; they are read from the user's environment or keychain.",
+      "Runs plain-language checks in a real browser using the user's locally configured Anthropic, OpenAI or OpenRouter key. Each check needs id (lowercase letters, digits and hyphens, unique), name, intent and passCondition, and may set startPath (a path starting with /) and observeOnly. A check passes only when browser assertions prove it. Never pass API keys; they are read from the user's environment or keychain. previewCommit works as in verification_run_tests.",
     inputSchema: toolInput(CheckBrowserInput),
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
   },

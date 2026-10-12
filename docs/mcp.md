@@ -4,11 +4,11 @@ katalepsis ships a local MCP server. A coding agent can run your Playwright test
 
 ## What the agent gets
 
-| Tool                         | What it does                                                                                                                                                                                             |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `verification_run_tests`     | Runs the project's Playwright tests against `baseUrl`. Optional `cwd`, `project`, `grep`, `timeoutSeconds`, and `installBrowsers` to run the project's own `playwright install` first. No AI key needed. |
-| `verification_check_browser` | Runs agent checks (`id`, `name`, `intent`, `passCondition`) against `baseUrl` with your locally configured provider and model. Optional `provider`, `model`, `allowOrigins`.                             |
-| `verification_get_report`    | Reads an earlier run by `runId`, as a summary, the Markdown report or the manifest.                                                                                                                      |
+| Tool                         | What it does                                                                                                                                                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `verification_run_tests`     | Runs the project's Playwright tests against `baseUrl`. Optional `cwd`, `project`, `grep`, `timeoutSeconds`, `installBrowsers` to run the project's own `playwright install` first, and `previewCommit`. No AI key needed. |
+| `verification_check_browser` | Runs agent checks (`id`, `name`, `intent`, `passCondition`) against `baseUrl` with your locally configured provider and model. Optional `provider`, `model`, `allowOrigins`, `previewCommit`.                             |
+| `verification_get_report`    | Reads an earlier run by `runId`, as a summary, the Markdown report or the manifest.                                                                                                                                       |
 
 Each run tool returns the run ID, status, counts, every check's result, what wasn't tested, and the paths to `report.html`, `report.md` and `manifest.json`.
 

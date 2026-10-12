@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /** A POSIX path inside the report bundle. Absolute paths and `..` segments are rejected. */
 export const BundlePath = Schema.String.check(
@@ -98,6 +98,7 @@ export const RunErrorCategory = Schema.Literals([
   "assertion",
   "budget",
   "infrastructure",
+  "commit-mismatch",
   "unknown",
 ]);
 export type RunErrorCategory = typeof RunErrorCategory.Type;
@@ -110,6 +111,17 @@ export const RunError = Schema.Struct({
 });
 export type RunError = typeof RunError.Type;
 
+export const PreviewCommit = Schema.Struct({
+  sha: Schema.String.check(Schema.isPattern(/^[0-9a-f]{7,40}$/)),
+  /** Where the commit came from: the caller, a response header, or a meta tag in the page. */
+  source: Schema.Literals(["option", "header", "meta"]),
+});
+export type PreviewCommit = typeof PreviewCommit.Type;
+
+/** Whether the preview reported the checkout's commit. Unknown when either side is missing. */
+export const CommitAlignment = Schema.Literals(["confirmed", "mismatched", "unknown"]);
+export type CommitAlignment = typeof CommitAlignment.Type;
+
 export const VerificationRun = Schema.Struct({
   schemaVersion: Schema.Literal(SCHEMA_VERSION),
   id: Schema.String,
@@ -117,6 +129,9 @@ export const VerificationRun = Schema.Struct({
   repository: Schema.NullOr(Schema.String),
   /** Commit of the local checkout. Null when it cannot be read; never guessed. */
   commitSha: Schema.NullOr(Schema.String),
+  /** Commit the preview reported it was built from. Null when it reported none. */
+  previewCommit: Schema.NullOr(PreviewCommit),
+  commitAlignment: CommitAlignment,
   startedAt: Schema.String,
   finishedAt: Schema.String,
   durationMs: NonNegativeNumber,

@@ -144,6 +144,49 @@ describe("katalepsis run against the demo signup form", () => {
     expect(stdout.trim()).toMatch(/report\.html$/);
   });
 
+  it("blocks a passing run and exits 2 when --preview-commit is not the checkout HEAD", async () => {
+    const head = execFileSync("git", ["rev-parse", "HEAD"], { cwd: demo, encoding: "utf8" }).trim();
+    const stale = head.startsWith("0000000") ? "1111111" : "0000000";
+    const args = [
+      "run",
+      "--url",
+      `http://127.0.0.1:${port}/`,
+      "--cwd",
+      demo,
+      "--out",
+      outDir,
+      "--grep",
+      "valid submission",
+    ];
+
+    const matching = await runCli([...args, "--preview-commit", head]);
+    expect(matching.code).toBe(0);
+    expect(matching.stdout).toContain("Preview commit: matches the checkout");
+
+    const mismatched = await runCli([...args, "--preview-commit", stale]);
+    expect(mismatched.code).toBe(2);
+    expect(mismatched.stdout).toContain("commit-mismatch:");
+    const manifest = JSON.parse(await readFile(path.join(bundleFrom(mismatched.stdout), "manifest.json"), "utf8"));
+    expect(manifest.commitAlignment).toBe("mismatched");
+    expect(manifest.previewCommit).toEqual({ sha: stale, source: "option" });
+  });
+
+  it("exits 3 for a --preview-commit that is not a SHA", async () => {
+    const { code, stderr } = await runCli([
+      "run",
+      "--url",
+      `http://127.0.0.1:${port}/`,
+      "--cwd",
+      demo,
+      "--out",
+      outDir,
+      "--preview-commit",
+      "main",
+    ]);
+    expect(code).toBe(3);
+    expect(stderr).toContain("7 to 40 hex characters");
+  });
+
   it("exits 3 for an invalid preview URL", async () => {
     const { code, stderr } = await runCli(["run", "--url", "file:///etc/passwd", "--cwd", demo, "--out", outDir]);
     expect(code).toBe(3);

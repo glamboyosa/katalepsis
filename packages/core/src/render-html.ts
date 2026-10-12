@@ -1,3 +1,4 @@
+import { alignmentSummary } from "./preview-commit.ts";
 import {
   countByStatus,
   coverageSummary,
@@ -289,6 +290,7 @@ ${barHtml(counts, run.notTested.length)}
 </div>
 <dl class="card meta">
 ${metaItem("Commit", run.commitSha === null ? "unknown" : `<code title="${escapeHtml(run.commitSha)}">${escapeHtml(run.commitSha.slice(0, 12))}</code>`)}
+${metaItem("Preview commit", `${run.previewCommit === null ? "" : `<code title="${escapeHtml(run.previewCommit.sha)}">${escapeHtml(run.previewCommit.sha.slice(0, 12))}</code> · `}${escapeHtml(alignmentSummary(run))}`)}
 ${metaItem("Repository", escapeHtml(run.repository ?? "unknown"))}
 ${metaItem("Duration", formatDuration(run.durationMs))}
 ${metaItem("Started", escapeHtml(run.startedAt))}

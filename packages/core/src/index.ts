@@ -6,6 +6,7 @@ export * from "./playwright-report.ts";
 export * from "./playwright-config.ts";
 export * from "./playwright-runner.ts";
 export * from "./preview-probe.ts";
+export * from "./preview-commit.ts";
 export * from "./run-metadata.ts";
 export * from "./evidence.ts";
 export * from "./render-markdown.ts";

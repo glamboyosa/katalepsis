@@ -16,10 +16,10 @@ const packageJson = createRequire(import.meta.url)("../package.json") as { versi
 const USAGE = `Usage:
   katalepsis init [--cwd <dir>]
   katalepsis run --url <preview-url> [--cwd <dir>] [--config <file>] [--project <name>]... [--grep <pattern>]
-               [--out <dir>] [--timeout <seconds>] [--env <label>] [--install-browsers]
+               [--out <dir>] [--timeout <seconds>] [--env <label>] [--install-browsers] [--preview-commit <sha>]
   katalepsis verify --url <preview-url> --checks <checks.json> [--provider <anthropic|openai|openrouter>]
                   [--model <id>] [--allow-origin <url>]... [--max-steps <n>] [--max-tokens <n>] [--check-timeout <seconds>]
-                  [--cwd <dir>] [--out <dir>] [--env <label>]
+                  [--cwd <dir>] [--out <dir>] [--env <label>] [--preview-commit <sha>]
   katalepsis report open [<run-id>] [--cwd <dir>] [--out <dir>] [--print]
   katalepsis auth set <anthropic|openai|openrouter>      Save a key in the OS keychain (read without echo)
   katalepsis auth status                                 Show where each key comes from
@@ -65,6 +65,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       env: { type: "string" },
       print: { type: "boolean" },
       "install-browsers": { type: "boolean" },
+      "preview-commit": { type: "string" },
       checks: { type: "string" },
       provider: { type: "string" },
       model: { type: "string" },
@@ -102,6 +103,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       environment: values.env ?? "local",
       version: packageJson.version,
       installBrowsers: values["install-browsers"] ?? false,
+      previewCommit: values["preview-commit"] ?? null,
     });
   }
   if (command === "verify") {
@@ -121,6 +123,7 @@ const main = async (argv: ReadonlyArray<string>): Promise<number> => {
       checkTimeoutSeconds: parsePositiveInt(values["check-timeout"], DEFAULT_CHECK_TIMEOUT_SECONDS, "--check-timeout"),
       environment: values.env ?? "local",
       version: packageJson.version,
+      previewCommit: values["preview-commit"] ?? null,
     });
   }
   if (command === "auth" && subcommand === "set") return authSetCommand(rest[0]);

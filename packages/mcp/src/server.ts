@@ -76,6 +76,8 @@ const summarize = (run: VerificationRun, bundleDir: string) => ({
   status: run.status,
   previewUrl: run.previewUrl,
   commit: run.commitSha ?? "unknown",
+  previewCommit: run.previewCommit?.sha ?? "unknown",
+  commitAlignment: run.commitAlignment,
   model: run.model,
   counts: {
     passed: run.checks.filter((check) => check.status === "passed").length,
@@ -166,6 +168,7 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
           grep: input.grep ?? null,
           timeoutMs: (input.timeoutSeconds ?? DEFAULT_RUN_TIMEOUT_SECONDS) * 1000,
           installBrowsers: input.installBrowsers ?? false,
+          previewCommit: input.previewCommit ?? null,
           environment: "mcp",
           toolVersion: options.version,
           signal,
@@ -188,6 +191,7 @@ export const createServer = (options: ServerOptions): KatalepsisServer => {
           budget: AGENT_BUDGET,
           environment: "mcp",
           toolVersion: options.version,
+          previewCommit: input.previewCommit ?? null,
           signal: AbortSignal.any([signal, AbortSignal.timeout(AGENT_RUN_LIMIT_MS)]),
           setupModel: () =>
             setupLocalModel(options.env, { provider: input.provider ?? null, model: input.model ?? null }),

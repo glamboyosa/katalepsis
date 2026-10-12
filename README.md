@@ -80,7 +80,7 @@ katalepsis run --cwd path/to/your-app --url https://your-preview.example.com
 katalepsis report open --cwd path/to/your-app
 ```
 
-`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout`, `--out` and `--install-browsers`. If a browser can't start, the run is blocked and katalepsis tells you to add `--install-browsers`. No AI key is involved.
+`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout`, `--out`, `--install-browsers` and `--preview-commit`. If a browser can't start, the run is blocked and katalepsis tells you to add `--install-browsers`. No AI key is involved.
 
 Each run folder can be zipped and attached to the pull request as it is:
 
@@ -88,7 +88,7 @@ Each run folder can be zipped and attached to the pull request as it is:
 artifacts/katalepsis/<run-id>/
   report.html      open in a browser; evidence is linked by relative path
   report.md        paste into the PR description or a comment
-  manifest.json    the validated results, schema version 1
+  manifest.json    the validated results, schema version 2
   evidence/<check-id>/   screenshots, videos, traces, each with its SHA-256 in the manifest
   evidence/run/playwright.log
 ```
@@ -129,11 +129,36 @@ $ katalepsis verify --cwd apps/demo-form --url http://127.0.0.1:4173 --checks ch
     --provider openrouter --model anthropic/claude-haiku-5.5
 katalepsis: FAILED (openrouter/anthropic/claude-haiku-5.5)
   2 passed, 1 failed, 0 blocked
+  Preview commit: not reported, so unconfirmed
   Report: artifacts/katalepsis/2026-10-10T12-45-05-343Z-b51a0a/report.html
   Markdown: artifacts/katalepsis/2026-10-10T12-45-05-343Z-b51a0a/report.md
 ```
 
 Each check is limited by `--max-steps` (15), `--max-tokens` (200,000) and `--check-timeout` (120 seconds). The browser can't leave the preview's origin unless you add `--allow-origin <url>`. In CI, keys come only from environment variables.
+
+## Check which commit the preview runs
+
+A preview can lag behind your branch, so a green run may describe older code. katalepsis compares `HEAD` of the checkout with the commit the preview was built from, taking the first of these it finds:
+
+1. An `x-commit-sha` response header on the preview URL.
+2. A `<meta name="commit-sha" content="<sha>">` tag in the page's `<head>`, within its first 512 KB.
+3. `--preview-commit <sha>` on `run` or `verify`, or `previewCommit` over MCP. Use it when CI knows the deployed commit, such as `github.event.deployment.sha` on a `deployment_status` event. Don't pass the pushed commit, such as `GITHUB_SHA`, since that is the commit you hope the preview has, not the one it has.
+
+Preview hosts don't send any of these by default, but their builds know the commit: `VERCEL_GIT_COMMIT_SHA` on Vercel, `COMMIT_REF` on Netlify and `CF_PAGES_COMMIT_SHA` on Cloudflare Pages. In a Next.js app on Vercel, for example:
+
+```tsx
+<meta name="commit-sha" content={process.env.VERCEL_GIT_COMMIT_SHA} />
+```
+
+A short SHA of at least 7 characters is enough. The report shows the preview commit next to the checkout commit with one of three results:
+
+| Result     | Meaning                                                     | Effect on the run                                                     |
+| ---------- | ----------------------------------------------------------- | --------------------------------------------------------------------- |
+| confirmed  | The preview reported the checkout `HEAD`                    | None. Uncommitted changes are still not part of the preview.          |
+| mismatched | The preview reported a different commit                     | A run that would pass is blocked (exit 2). A failed run stays failed. |
+| unknown    | The preview reported nothing, or the checkout has no commit | None. The report says the commit is unconfirmed.                      |
+
+The checks still run on a mismatch, so you can see what the deployed code does. A failure there is real for that deployment, so it isn't hidden, but a pass can't count as evidence for your checkout.
 
 ## From your agent harness
 
@@ -158,7 +183,7 @@ For Playwright runs, Playwright's own outcome stands. katalepsis reads its JSON 
 
 Before starting a browser, katalepsis requests the preview URL. A network error or an HTTP 502, 503 or 504 blocks every selected test.
 
-The commit in the report is `HEAD` of the project checkout, or `unknown`. katalepsis doesn't confirm the preview was built from it.
+The commit in the report is `HEAD` of the project checkout, or `unknown`. A preview that reports a different commit blocks a run that would pass; see [Check which commit the preview runs](#check-which-commit-the-preview-runs).
 
 Ctrl-C stops Playwright and its browsers and still writes a blocked report. A second Ctrl-C quits at once.
 
@@ -193,6 +218,7 @@ apps/site              the landing page and the product video
 - [ADR 0001](docs/adr/0001-playwright-results-report-schema-and-boundaries.md): result authority, report schema and boundaries
 - [ADR 0002](docs/adr/0002-agent-checks-and-byok.md): how agent checks are decided, limits, keys and models
 - [ADR 0003](docs/adr/0003-mcp-server.md): the MCP server
+- [ADR 0004](docs/adr/0004-preview-commit-alignment.md): comparing the preview's commit with the checkout
 - [MCP setup](docs/mcp.md)
 - [Reference review](docs/reference-review.md): how Docket and Conclave handle keys
 - [Implementation status](IMPLEMENTATION_STATUS.md): what's built, what was tested and known limitations

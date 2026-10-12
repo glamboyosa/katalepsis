@@ -113,11 +113,12 @@ const leftoverBrowsers = async (baseline: ReadonlySet<string>): Promise<Array<st
   return [...browserProcesses()].filter((pid) => !baseline.has(pid));
 };
 
-const Metadata = Layer.succeed(RunMetadata, {
-  now: Effect.sync(() => new Date()),
-  commitSha: () => Effect.succeed(null),
-  repository: () => Effect.succeed(null),
-});
+const metadata = (checkout: string | null) =>
+  Layer.succeed(RunMetadata, {
+    now: Effect.sync(() => new Date()),
+    commitSha: () => Effect.succeed(checkout),
+    repository: () => Effect.succeed(null),
+  });
 
 const check = (id: string, overrides: Partial<AgentCheck> = {}): AgentCheck => ({
   id,
@@ -128,7 +129,11 @@ const check = (id: string, overrides: Partial<AgentCheck> = {}): AgentCheck => (
 });
 
 /** Runs a single check with a scripted model standing in for the provider. */
-const runOne = async (script: ReadonlyArray<ScriptedStep>, overrides: Partial<AgentVerifyOptions> = {}) => {
+const runOne = async (
+  script: ReadonlyArray<ScriptedStep>,
+  overrides: Partial<AgentVerifyOptions> = {},
+  checkout: string | null = null,
+) => {
   const setupModel = async (): Promise<ModelSetup> => ({
     model: scriptedModel(script),
     info: { provider: "test", id: "scripted" },
@@ -149,7 +154,7 @@ const runOne = async (script: ReadonlyArray<ScriptedStep>, overrides: Partial<Ag
     ...overrides,
   };
   const outcome = await Effect.runPromise(
-    verifyWithAgent(options).pipe(Effect.provide(Layer.merge(PreviewProbeLive, Metadata))),
+    verifyWithAgent(options).pipe(Effect.provide(Layer.merge(PreviewProbeLive, metadata(checkout)))),
   );
   const [result] = outcome.run.checks;
   if (result === undefined) throw new Error("no check in the run");
@@ -192,6 +197,24 @@ describe("verifyWithAgent on the demo signup form", () => {
     ]);
     expect(result.status).toBe("passed");
     expect(result.failure).toBeNull();
+  });
+
+  it("blocks a passing run when the preview was built from another commit", async () => {
+    const { result, run } = await runOne(
+      [
+        { tool: "fill", input: { label: "Name", value: "Test Person" } },
+        { tool: "fill", input: { label: "Email", value: "test.person@example.com" } },
+        { tool: "click", input: { role: "button", name: "Sign up" } },
+        { tool: "assert", input: { expectation: "visible", text: "Thanks, you're signed up." } },
+        { tool: "finish", input: { verdict: "passed", summary: "Confirmation shown.", assertionIds: ["a1"] } },
+      ],
+      { previewCommit: "abcdef1" },
+      "0123456789abcdef0123456789abcdef01234567",
+    );
+    expect(result.status).toBe("passed");
+    expect(run.status).toBe("blocked");
+    expect(run.commitAlignment).toBe("mismatched");
+    expect(run.errors.map((error) => error.category)).toEqual(["commit-mismatch"]);
   });
 
   it("runs tool calls from one step in order, so parallel fills and assertions stay separate", async () => {

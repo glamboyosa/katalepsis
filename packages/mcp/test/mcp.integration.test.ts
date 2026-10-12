@@ -117,10 +117,12 @@ describe("katalepsis MCP server", () => {
   });
 
   it("runs the demo's Playwright tests and reads the report back", async () => {
-    const result = await call("verification_run_tests", { baseUrl });
+    const result = await call("verification_run_tests", { baseUrl, previewCommit: "ABCDEF1" });
     expect(result.isError).toBeUndefined();
     const summary = result.structuredContent ?? {};
     expect(summary["status"]).toBe("failed");
+    expect(summary["previewCommit"]).toBe("abcdef1");
+    expect(summary["commitAlignment"]).toBe("mismatched");
     expect(summary["counts"]).toEqual({ passed: 2, failed: 1, blocked: 0, notTested: 0 });
     expect(existsSync(summary["report"].html)).toBe(true);
 
@@ -150,6 +152,12 @@ describe("katalepsis MCP server", () => {
     const result = await call("verification_run_tests", { baseUrl, cwd: "../../.." });
     expect(result.isError).toBe(true);
     expect(result.content[0]?.text).toBe("cwd must be inside the workspace root this server was started with.");
+  });
+
+  it("rejects a previewCommit that is not a SHA", async () => {
+    const result = await call("verification_run_tests", { baseUrl, previewCommit: "main" });
+    expect(result.isError).toBe(true);
+    expect(result.content[0]?.text).toContain("previewCommit");
   });
 
   it("rejects invalid arguments without running anything", async () => {

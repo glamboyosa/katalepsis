@@ -22,11 +22,13 @@ const check = (overrides: Partial<VerificationCheck>): VerificationCheck => ({
 });
 
 const run: VerificationRun = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   id: "2026-01-01T00-00-00-000Z-abcdef",
   previewUrl: "https://preview.example.com/?token=REDACTED",
   repository: null,
   commitSha: null,
+  previewCommit: null,
+  commitAlignment: "unknown",
   startedAt: "2026-01-01T00:00:00.000Z",
   finishedAt: "2026-01-01T00:00:05.000Z",
   durationMs: 5000,
@@ -88,6 +90,24 @@ describe("renderHtml", () => {
   });
 });
 
+describe("preview commit line", () => {
+  const mismatched: VerificationRun = {
+    ...run,
+    commitSha: "0123456789abcdef0123456789abcdef01234567",
+    previewCommit: { sha: "fedcba9876543210fedcba9876543210fedcba98", source: "header" },
+    commitAlignment: "mismatched",
+  };
+
+  it("shows the preview's commit and that it does not match the checkout", () => {
+    expect(renderMarkdown(mismatched)).toContain(
+      "- Preview commit: `fedcba9876543210fedcba9876543210fedcba98`, does not match the checkout",
+    );
+    expect(renderHtml(mismatched)).toContain(
+      '<dt>Preview commit</dt><dd><code title="fedcba9876543210fedcba9876543210fedcba98">fedcba987654</code> · does not match the checkout</dd>',
+    );
+  });
+});
+
 describe("renderMarkdown", () => {
   it("lists failures first and keeps table cells intact", () => {
     const markdown = renderMarkdown(run);
@@ -95,6 +115,7 @@ describe("renderMarkdown", () => {
     expect(rows[0]).toContain("signup › empty submission");
     expect(markdown).toContain("pipes \\| in \\<title\\>");
     expect(markdown).toContain("Commit: unknown");
+    expect(markdown).toContain("Preview commit: not reported, so unconfirmed");
     expect(markdown).toContain("[screenshot](evidence/bbbbbbbbbbbb/retry-0-screenshot.png)");
   });
 

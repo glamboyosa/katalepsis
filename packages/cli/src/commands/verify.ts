@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { parseChecksFile, setupLocalModel, verifyWithAgent } from "@katalepsis/agent";
-import { PreviewProbeLive, RunMetadataLive } from "@katalepsis/core";
+import { alignmentSummary, PreviewProbeLive, RunMetadataLive } from "@katalepsis/core";
 import { Effect, Layer } from "effect";
 import { EXIT, exitCodeFor } from "../exit-codes.ts";
 import { cancelOnSignal } from "./cancel.ts";
@@ -20,6 +20,8 @@ export type VerifyArgs = {
   readonly checkTimeoutSeconds: number;
   readonly environment: string;
   readonly version: string;
+  /** The commit the preview was built from, when CI knows it. */
+  readonly previewCommit: string | null;
 };
 
 /** Runs agent checks from a checks file and prints the same summary as `run`. */
@@ -36,6 +38,7 @@ export const verifyCommand = async (args: VerifyArgs): Promise<number> => {
     budget: { maxSteps: args.maxSteps, maxTotalTokens: args.maxTokens, timeoutMs: args.checkTimeoutSeconds * 1000 },
     environment: args.environment,
     toolVersion: args.version,
+    previewCommit: args.previewCommit,
     signal: cancellation.signal,
     setupModel: () => setupLocalModel(process.env, { provider: args.provider, model: args.model }),
   })
@@ -46,6 +49,7 @@ export const verifyCommand = async (args: VerifyArgs): Promise<number> => {
           `katalepsis: ${run.status.toUpperCase()}${run.model === null ? "" : ` (${run.model.provider}/${run.model.id})`}`,
         );
         console.log(`  ${count("passed")} passed, ${count("failed")} failed, ${count("blocked")} blocked`);
+        console.log(`  Preview commit: ${alignmentSummary(run)}`);
         for (const error of run.errors) console.log(`  ${error.category}: ${error.message}`);
         console.log(`  Report: ${path.join(bundleDir, "report.html")}`);
         console.log(`  Markdown: ${path.join(bundleDir, "report.md")}`);

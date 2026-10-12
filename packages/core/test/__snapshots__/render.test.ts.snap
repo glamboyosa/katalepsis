@@ -148,6 +148,7 @@ footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--border
 </div>
 <dl class="card meta">
 <div><dt>Commit</dt><dd>unknown</dd></div>
+<div><dt>Preview commit</dt><dd>not reported, so unconfirmed</dd></div>
 <div><dt>Repository</dt><dd>unknown</dd></div>
 <div><dt>Duration</dt><dd>5.0 s</dd></div>
 <div><dt>Started</dt><dd>2026-01-01T00:00:00.000Z</dd></div>
@@ -182,6 +183,7 @@ exports[`renderMarkdown > is deterministic 1`] = `
 
 - Preview: https://preview.example.com/?token=REDACTED
 - Commit: unknown
+- Preview commit: not reported, so unconfirmed
 - Started: 2026-01-01T00:00:00.000Z
 - Duration: 5.0 s
 - Runner: katalepsis 0.1.0, Playwright 1.63.0, Node 22.12.0

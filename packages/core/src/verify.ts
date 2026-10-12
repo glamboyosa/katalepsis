@@ -6,6 +6,7 @@ import { copyEvidence, writeRunLog } from "./evidence.ts";
 import { declaredTests, normalizePlaywrightReport, type DeclaredTest } from "./playwright-report.ts";
 import { configMentionsBaseUrl, findPlaywrightConfig } from "./playwright-config.ts";
 import { PlaywrightRunner, type PlaywrightSelection } from "./playwright-runner.ts";
+import { compareCommits, overriddenCommitNote, previewCommitOption } from "./preview-commit.ts";
 import { PreviewProbe } from "./preview-probe.ts";
 import { newRunId, writeBundle } from "./bundle.ts";
 import { RunMetadata } from "./run-metadata.ts";
@@ -23,6 +24,7 @@ import {
   VerificationRun,
   type EvidenceFile,
   type NotTested,
+  type PreviewCommit,
   type RunError,
   type VerificationCheck,
 } from "./schema.ts";
@@ -40,6 +42,8 @@ export type VerifyOptions = {
   readonly installBrowsers?: boolean;
   readonly environment: string;
   readonly toolVersion: string;
+  /** The commit the preview was built from, used when the preview itself reports none. */
+  readonly previewCommit?: string | null;
   /** Aborting it stops Playwright; the run is then reported as blocked. */
   readonly signal: AbortSignal;
 };
@@ -326,6 +330,7 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
         new ConfigurationError({ message: error instanceof InvalidPreviewUrl ? error.message : String(error) }),
     });
     const secrets = previewUrlSecrets(preview);
+    const givenCommit = yield* previewCommitOption(options.previewCommit);
     const install = yield* runner.locate(options.cwd);
     const configFile = findPlaywrightConfig(options.cwd, options.config);
     const mentionsBaseUrl = yield* Effect.promise(() => configMentionsBaseUrl(configFile));
@@ -368,20 +373,30 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
         // listing only loses the list of excluded tests, so the selected tests still run.
         const probeAndRun = Effect.gen(function* () {
           const reachability = yield* probe.check(preview.raw, options.signal);
-          if (options.signal.aborted) return notRun([CANCELLED]);
-          return reachability.reachable
-            ? yield* executeTests(options, selection, preview, bundleDir, secrets)
-            : blockedExecution(selected.listing.tests, preview, redact(reachability.reason, secrets));
+          if (options.signal.aborted) return { execution: notRun([CANCELLED]), reported: null };
+          if (!reachability.reachable) {
+            return {
+              execution: blockedExecution(selected.listing.tests, preview, redact(reachability.reason, secrets)),
+              reported: null,
+            };
+          }
+          return {
+            execution: yield* executeTests(options, selection, preview, bundleDir, secrets),
+            reported: reachability.commit,
+          };
         });
-        const execution: Execution = listFailed
-          ? notRun([])
+        const { execution, reported }: { execution: Execution; reported: PreviewCommit | null } = listFailed
+          ? { execution: notRun([]), reported: null }
           : options.signal.aborted
-            ? notRun(all.listing.error === null ? [CANCELLED] : [])
+            ? { execution: notRun(all.listing.error === null ? [CANCELLED] : []), reported: null }
             : yield* probeAndRun;
 
         const commitSha = yield* metadata.commitSha(options.cwd);
         const repository = yield* metadata.repository(options.cwd);
         const finishedAt = yield* metadata.now;
+        // What the preview serves outranks what the caller expects it to serve.
+        const previewCommit = reported ?? givenCommit;
+        const commits = compareCommits(commitSha, previewCommit);
 
         const notTested = notTestedFor(all.listing, selected.listing, execution);
         const unreported = notTested.filter((item) => item.reason === NO_RESULT).length;
@@ -390,6 +405,7 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
           ...(installError === null ? [] : [installError]),
           ...listErrors.filter((error) => error !== null),
           ...execution.errors,
+          ...(commits.error === null ? [] : [commits.error]),
           // Tests that were listed but never reported are not a deliberate gap, so they block the run.
           ...(unreported > 0 && execution.errors.length === 0
             ? [
@@ -415,6 +431,8 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
           previewUrl: preview.display,
           repository,
           commitSha,
+          previewCommit,
+          commitAlignment: commits.alignment,
           startedAt: startedIso,
           finishedAt: finishedAt.toISOString(),
           durationMs: finishedAt.getTime() - startedAt.getTime(),
@@ -429,9 +447,8 @@ export const verifyWithPlaywright = (options: VerifyOptions) =>
             mentionsBaseUrl === false && configFile !== null
               ? `${path.basename(configFile)} does not mention KATALEPSIS_BASE_URL, so the tests may have run against a baseURL set in that config rather than ${preview.display}.`
               : "katalepsis passes the preview URL to Playwright as KATALEPSIS_BASE_URL. It cannot confirm that the Playwright config reads it.",
-            commitSha === null
-              ? "Commit is unknown: the project directory is not a git checkout with a commit."
-              : "Commit is the HEAD of the local checkout. katalepsis does not confirm that the preview was built from it.",
+            commits.limitation,
+            ...overriddenCommitNote(givenCommit, reported),
             "Only the project's Playwright tests were checked. Behaviour without a test is not covered.",
             ...(evidence.some((file) => file.checkId !== null)
               ? [

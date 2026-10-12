@@ -57,7 +57,11 @@ type FakeRunner = {
   stoppedBy?: PlaywrightProcessError;
 };
 
-const layers = (fake: FakeRunner, probe: ProbeResult = { reachable: true }) => {
+const layers = (
+  fake: FakeRunner,
+  probe: ProbeResult = { reachable: true, commit: null },
+  checkout: string | null = null,
+) => {
   const calls = { run: 0, installs: 0, baseUrls: [] as Array<string>, listBaseUrls: [] as Array<string> };
   const layer = Layer.mergeAll(
     Layer.succeed(PlaywrightRunner, {
@@ -87,7 +91,7 @@ const layers = (fake: FakeRunner, probe: ProbeResult = { reachable: true }) => {
     Layer.succeed(PreviewProbe, { check: () => Effect.succeed(probe) }),
     Layer.succeed(RunMetadata, {
       now: Effect.succeed(new Date("2026-01-01T00:00:00.000Z")),
-      commitSha: () => Effect.succeed(null),
+      commitSha: () => Effect.succeed(checkout),
       repository: () => Effect.succeed(null),
     }),
   );
@@ -519,6 +523,127 @@ describe("verifyWithPlaywright", () => {
           Effect.provide(layer),
         ),
       ),
+    );
+
+    expect(failure._tag).toBe("ConfigurationError");
+    expect(await readdir(outDir)).toEqual([]);
+  });
+});
+
+const CHECKOUT = "0123456789abcdef0123456789abcdef01234567";
+const OTHER = "fedcba9876543210fedcba9876543210fedcba98";
+const oneTest = (status: "passed" | "failed") => ({
+  listed: report([{ title: "signs up", tests: [test({ status: "skipped", results: [] })] }]),
+  run: () =>
+    Effect.succeed(
+      report([
+        {
+          title: "signs up",
+          tests: [
+            status === "passed"
+              ? test()
+              : test({ status: "unexpected", results: [result({ status: "failed", error: { message: "boom" } })] }),
+          ],
+        },
+      ]),
+    ),
+});
+const verify = (
+  layer: Layer.Layer<PlaywrightRunner | PreviewProbe | RunMetadata>,
+  overrides: Partial<VerifyOptions> = {},
+) => Effect.runPromise(verifyWithPlaywright(options(overrides)).pipe(Effect.provide(layer)));
+
+describe("preview commit", () => {
+  it("confirms the preview when it reports the checkout HEAD, even as a short SHA", async () => {
+    const { layer } = layers(
+      oneTest("passed"),
+      { reachable: true, commit: { sha: "0123456", source: "header" } },
+      CHECKOUT,
+    );
+
+    const { run } = await verify(layer);
+
+    expect(run.status).toBe("passed");
+    expect(run.commitAlignment).toBe("confirmed");
+    expect(run.previewCommit).toEqual({ sha: "0123456", source: "header" });
+    expect(run.errors).toEqual([]);
+  });
+
+  it("blocks a passing run when the preview was built from another commit", async () => {
+    const { layer } = layers(oneTest("passed"), { reachable: true, commit: { sha: OTHER, source: "meta" } }, CHECKOUT);
+
+    const { run } = await verify(layer);
+
+    expect(run.checks.map((check) => check.status)).toEqual(["passed"]);
+    expect(run.status).toBe("blocked");
+    expect(run.commitAlignment).toBe("mismatched");
+    expect(run.errors).toEqual([expect.objectContaining({ category: "commit-mismatch", stage: "preview-commit" })]);
+    expect(run.errors[0]?.message).toContain(OTHER);
+  });
+
+  it("keeps a failed run failed when the preview was built from another commit", async () => {
+    const { layer } = layers(
+      oneTest("failed"),
+      { reachable: true, commit: { sha: OTHER, source: "header" } },
+      CHECKOUT,
+    );
+
+    const { run } = await verify(layer);
+
+    expect(run.status).toBe("failed");
+    expect(run.commitAlignment).toBe("mismatched");
+  });
+
+  it("trusts what the preview reports over the given commit", async () => {
+    const { layer } = layers(
+      oneTest("passed"),
+      { reachable: true, commit: { sha: OTHER, source: "header" } },
+      CHECKOUT,
+    );
+
+    const { run } = await verify(layer, { previewCommit: CHECKOUT });
+
+    expect(run.previewCommit).toEqual({ sha: OTHER, source: "header" });
+    expect(run.commitAlignment).toBe("mismatched");
+    expect(run.status).toBe("blocked");
+    expect(run.coverageLimitations.join("\n")).toContain(`the commit passed to katalepsis, ${CHECKOUT}, was not used`);
+  });
+
+  it("uses the given commit when the preview reports none", async () => {
+    const { layer } = layers(oneTest("passed"), { reachable: true, commit: null }, CHECKOUT);
+
+    const { run } = await verify(layer, { previewCommit: CHECKOUT.toUpperCase() });
+
+    expect(run.previewCommit).toEqual({ sha: CHECKOUT, source: "option" });
+    expect(run.commitAlignment).toBe("confirmed");
+    expect(run.status).toBe("passed");
+  });
+
+  it("leaves the verdict alone and says why when the preview reports no commit", async () => {
+    const { layer } = layers(oneTest("passed"), { reachable: true, commit: null }, CHECKOUT);
+
+    const { run } = await verify(layer);
+
+    expect(run.status).toBe("passed");
+    expect(run.commitAlignment).toBe("unknown");
+    expect(run.coverageLimitations.join("\n")).toContain("The preview did not report its commit");
+  });
+
+  it("is unknown when the checkout has no commit, even if the preview reports one", async () => {
+    const { layer } = layers(oneTest("passed"), { reachable: true, commit: { sha: OTHER, source: "header" } }, null);
+
+    const { run } = await verify(layer);
+
+    expect(run.status).toBe("passed");
+    expect(run.commitAlignment).toBe("unknown");
+    expect(run.previewCommit?.sha).toBe(OTHER);
+  });
+
+  it("refuses a given commit that is not a SHA before writing anything", async () => {
+    const { layer } = layers(oneTest("passed"));
+
+    const failure = await Effect.runPromise(
+      Effect.flip(verifyWithPlaywright(options({ previewCommit: "main" })).pipe(Effect.provide(layer))),
     );
 
     expect(failure._tag).toBe("ConfigurationError");

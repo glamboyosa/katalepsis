@@ -15,8 +15,12 @@ import {
   SCHEMA_VERSION,
   VerificationRun,
   aggregateStatus,
+  compareCommits,
+  overriddenCommitNote,
+  previewCommitOption,
   writeBundle,
   type PendingAttachment,
+  type PreviewCommit,
   type RunError,
   type VerificationCheck,
 } from "@katalepsis/core";
@@ -50,6 +54,8 @@ export type AgentVerifyOptions = {
   readonly budget: Budget;
   readonly environment: string;
   readonly toolVersion: string;
+  /** The commit the preview was built from, used when the preview itself reports none. */
+  readonly previewCommit?: string | null;
   readonly signal: AbortSignal;
   /** Resolves credentials and validates the model. Called only when the preview is reachable. */
   readonly setupModel: () => Promise<ModelSetup>;
@@ -274,6 +280,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
         }),
     });
     const allowedOrigins = [preview.origin, ...extraOrigins];
+    const givenCommit = yield* previewCommitOption(options.previewCommit);
     const startedAt = yield* metadata.now;
     const runId = newRunId(startedAt);
     const bundleDir = path.resolve(options.outDir, runId);
@@ -291,6 +298,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
           errors: [error],
           model: null,
           secrets: previewUrlSecrets(preview),
+          reported: null as PreviewCommit | null,
         });
 
         const reachability = yield* probe.check(preview.raw, options.signal);
@@ -311,8 +319,11 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
           );
         }
 
+        const reported = reachability.commit;
         const setup = yield* Effect.promise(() => options.setupModel());
-        if ("error" in setup) return blockAll("agent", { code: "model", message: setup.error.message }, setup.error);
+        if ("error" in setup) {
+          return { ...blockAll("agent", { code: "model", message: setup.error.message }, setup.error), reported };
+        }
         const secrets = [...previewUrlSecrets(preview), ...setup.secrets];
         const project = `${setup.info.provider}/${setup.info.id}`;
 
@@ -329,6 +340,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
             ),
             model: setup.info,
             secrets,
+            reported,
           };
         }
 
@@ -379,6 +391,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
           errors: options.signal.aborted ? [CANCELLED] : [],
           model: setup.info,
           secrets,
+          reported,
           evidence: copied.files,
           missing: copied.missing,
         };
@@ -393,6 +406,10 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
     const commitSha = yield* metadata.commitSha(options.cwd);
     const repository = yield* metadata.repository(options.cwd);
     const finishedAt = yield* metadata.now;
+    // What the preview serves outranks what the caller expects it to serve.
+    const previewCommit = outcome.reported ?? givenCommit;
+    const commits = compareCommits(commitSha, previewCommit);
+    const errors = [...outcome.errors, ...(commits.error === null ? [] : [commits.error])];
 
     const run = yield* Schema.decodeUnknownEffect(VerificationRun)({
       schemaVersion: SCHEMA_VERSION,
@@ -400,21 +417,22 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
       previewUrl: preview.display,
       repository,
       commitSha,
+      previewCommit,
+      commitAlignment: commits.alignment,
       startedAt: startedAt.toISOString(),
       finishedAt: finishedAt.toISOString(),
       durationMs: finishedAt.getTime() - startedAt.getTime(),
       environment: options.environment,
       runner: { katalepsis: options.toolVersion, playwright: playwrightVersion, node: process.versions.node },
       model: outcome.model,
-      status: aggregateStatus(checkResults, outcome.errors),
+      status: aggregateStatus(checkResults, errors),
       declaredTests: checks.length,
       checks: checkResults,
       notTested: [],
       coverageLimitations: [
         "These are agent checks. A model chose the actions and which browser assertions to run; katalepsis decided each status from those assertions. Compare the cited assertions with each pass condition.",
-        commitSha === null
-          ? "Commit is unknown: the project directory is not a git checkout with a commit."
-          : "Commit is the HEAD of the local checkout. katalepsis does not confirm that the preview was built from it.",
+        commits.limitation,
+        ...overriddenCommitNote(givenCommit, outcome.reported),
         `The browser could visit only ${[preview.origin, ...extraOrigins].join(", ")}.`,
         ...(evidence.length > 0
           ? [
@@ -426,7 +444,7 @@ export const verifyWithAgent = (options: AgentVerifyOptions) =>
           : []),
       ],
       evidence,
-      errors: outcome.errors,
+      errors,
     }).pipe(
       Effect.mapError(
         (error) => new ReportWriteError({ message: `Internal error: the run manifest is invalid. ${error.message}` }),

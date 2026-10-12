@@ -133,7 +133,7 @@ M2, on macOS with Node 23.9.0, demo form at `http://127.0.0.1:4173`:
 - **The project's reporters are replaced** by the JSON reporter during a katalepsis run.
 - **Evidence is not redacted.** Screenshots, videos and traces are copied as Playwright wrote them. The report warns about this.
 - **Inline attachments** (`testInfo.attach` with a body instead of a path) are counted but not bundled.
-- **Commit is the local checkout's HEAD.** There is no check that the preview was built from it. Uncommitted changes are not detected.
+- **Preview commit depends on the app or CI.** katalepsis compares the checkout's HEAD with the commit from an `x-commit-sha` header, a `commit-sha` meta tag or `--preview-commit`. No preview host sends these by default, so without setup the alignment is unknown and the verdict is unchanged. Uncommitted changes are not detected.
 - **Node 23, macOS only.** Development used Node 23.9.0 on macOS. Vitest 5 declares support for Node 22.12, 24 and 26 but not 23; it ran without problems. Not yet run on Node 22 or 24, Linux or Windows. On Windows, cancellation signals only the Playwright process, not its whole process tree.
 - **Playwright version.** Tested with Playwright 1.63.0 only, because 1.64 needs a browser build not installed on this machine.
 - **No ZIP output.** Attach the run folder by zipping it yourself.
