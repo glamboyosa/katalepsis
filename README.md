@@ -80,7 +80,7 @@ katalepsis run --cwd path/to/your-app --url https://your-preview.example.com
 katalepsis report open --cwd path/to/your-app
 ```
 
-`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout`, `--out`, `--install-browsers` and `--preview-commit`. If a browser can't start, the run is blocked and katalepsis tells you to add `--install-browsers`. No AI key is involved.
+`init` checks that Playwright is installed and prints the config snippet if it's missing. `run` accepts `--grep`, `--project` (repeatable), `--config`, `--timeout`, `--out`, `--install-browsers` and `--preview-commit`. If a browser can't start, the run is blocked and katalepsis tells you to add `--install-browsers`. No AI key is involved. If your Playwright config doesn't read `KATALEPSIS_BASE_URL`, `run` warns before it starts, since the tests would probably hit the `baseURL` in the config instead of the preview.
 
 Each run folder can be zipped and attached to the pull request as it is:
 
@@ -121,6 +121,15 @@ katalepsis verify --url https://your-preview.example.com --checks checks.json
 ```
 
 The model can click, type, read the page and run assertions, but it can't decide the result. A check passes only when the model cites a browser assertion that katalepsis ran, that passed, and that shows something which wasn't on the page before the model acted. A claim without that evidence is reported as blocked. Every check's report lists all the assertions it ran next to the pass condition, with a screenshot for each, a trace and the full action log.
+
+How that is enforced:
+
+- The model gets seven tools: `navigate`, `snapshot`, `click`, `fill`, `press`, `assert` and `finish`. It sees the page as an accessibility tree (roles, names and text) and the result of each tool. Screenshots are taken for the report and never sent to the model.
+- `assert` is run by katalepsis in the browser, not judged by the model. Each one gets an ID such as `a3`, a screenshot and a line in the action log. `finish` must cite those IDs.
+- Each check opens its start page twice, in two separate browser contexts. The model works in one; the other stays untouched. A "visible" assertion that also matches on the untouched copy was already there before the model acted, so it can't carry a pass on its own. Checks about the page as it loads can set `observeOnly` to skip this rule.
+- A pass is blocked if a cited assertion failed, if it cites only hidden or URL assertions, if an assertion that wasn't cited failed after the cited ones, or if it cites an ID that never ran. A verdict with no citation is blocked.
+- Browser actions run one at a time, even when the model sends several tool calls at once, so two `fill` calls can't type into the same field.
+- Each check gets a fresh browser context with tracing on. Running out of steps, tokens or time, a model error, or leaving the allowed origins ends the check as blocked with the reason, never as failed.
 
 The same demo checks with a real model:
 
