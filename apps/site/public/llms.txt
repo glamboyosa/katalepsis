@@ -15,3 +15,4 @@ katalepsis is not on npm. Install it with `curl -fsSL https://www.katalepsis.gla
 - [ADR 0001](https://github.com/glamboyosa/katalepsis/blob/main/docs/adr/0001-playwright-results-report-schema-and-boundaries.md): result authority, report schema and boundaries
 - [ADR 0002](https://github.com/glamboyosa/katalepsis/blob/main/docs/adr/0002-agent-checks-and-byok.md): how agent checks are decided, limits, keys and models
 - [ADR 0003](https://github.com/glamboyosa/katalepsis/blob/main/docs/adr/0003-mcp-server.md): the MCP server
+- [ADR 0004](https://github.com/glamboyosa/katalepsis/blob/main/docs/adr/0004-preview-commit-alignment.md): how a run confirms the preview was built from the checked-out commit
