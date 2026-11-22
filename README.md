@@ -1,6 +1,17 @@
 # katalepsis
 
-A command-line tool that runs a project's Playwright tests, or plain-English checks driven by a model, against a preview deployment and writes a report for the pull request. Every check ends up passed, failed, blocked or not tested, with the screenshot, video and trace behind each failure.
+<a href="https://www.katalepsis.glamboyosa.xyz/#video-title"><img src="docs/media/katalepsis-demo.gif" alt="katalepsis running a project's Playwright tests against a preview, then the report showing the failing check with its error, screenshot and video" width="100%" /></a>
+
+Pull requests get marked as tested, by people or by coding agents, with nothing to show for it: no screenshot, no trace, and no record of what was skipped.
+
+katalepsis is a command-line tool that runs a project's Playwright tests, or plain-English checks driven by a model, against a preview deployment and writes a report for the pull request. Every check ends up passed, failed, blocked or not tested, with the screenshot, video and trace behind each failure.
+
+- Works with the Playwright tests and config you already have, and needs no AI key for them
+- Plain-English checks for flows nobody has written a test for, where a model works through them in a real browser on your own Anthropic, OpenAI or OpenRouter key and can only pass by citing an assertion it ran
+- Skipped and filtered checks are listed by name, so nothing quietly counts as passed
+- An MCP server, so Claude Code, Codex or any other MCP harness can run checks and read the report itself
+- An HTML report to open and a Markdown one to paste into the pull request, both in one folder you can zip and attach
+- Open source, and runs on your machine
 
 ```console
 $ katalepsis run --cwd apps/demo-form --url http://127.0.0.1:4173
